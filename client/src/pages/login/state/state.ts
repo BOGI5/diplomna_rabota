@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface UserDef {
   id: string;
@@ -28,8 +28,8 @@ export const useAuthState = create(
       },
     }),
     {
-      name: 'user',
+      name: "user",
       storage: createJSONStorage(() => localStorage),
-    },
-  ),
+    }
+  )
 );

@@ -1,7 +1,7 @@
-import { jwtDecode } from 'jwt-decode';
-import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { UserDef, useAuthState } from '../auth/state/state';
+import { jwtDecode } from "jwt-decode";
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { UserDef, useAuthState } from "../login/state/state";
 
 const GoogleOAuthSuccessRedirect = () => {
   const [params] = useSearchParams();
@@ -9,7 +9,7 @@ const GoogleOAuthSuccessRedirect = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const jwtUser = params.get('jwtUser');
+    const jwtUser = params.get("jwtUser");
     if (jwtUser) {
       const userFromJwt: UserDef = jwtDecode(jwtUser);
       if (userFromJwt) {
@@ -17,7 +17,7 @@ const GoogleOAuthSuccessRedirect = () => {
       }
     }
 
-    navigate('/');
+    navigate("/");
   }, [navigate, params, setUser]);
 
   return <div>Logging in...</div>;
