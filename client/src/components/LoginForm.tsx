@@ -4,17 +4,23 @@ import { Password } from "primereact/password";
 export default function LoginForm() {
   return (
     <>
-      <div className="p-inputgroup my-3">
+      <h1>Login</h1>
+      <div className="p-inputgroup my-3 flex">
         <span className="p-inputgroup-addon">
           <i className="pi pi-at"></i>
         </span>
-        <InputText placeholder="Email" type="email" />
+        <InputText placeholder="Email" type="email" id="email" required />
       </div>
-      <div className="p-inputgroup my-3">
+      <div className="p-inputgroup my-3 flex">
         <span className="p-inputgroup-addon">
           <i className="pi pi-lock"></i>
         </span>
-        <Password placeholder="Password" feedback={false} />
+        <Password
+          placeholder="Password"
+          feedback={false}
+          id="password"
+          required
+        />
       </div>
     </>
   );

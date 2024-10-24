@@ -1,78 +1,93 @@
-import { Toast } from "primereact/toast";
+import { useState } from "react";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
-import { ToggleButton } from "primereact/togglebutton";
 import { Divider } from "primereact/divider";
-import { useRef, useState } from "react";
-import LoginForm from "../../components/LoginForm";
+import { ToggleButton } from "primereact/togglebutton";
 import RegistrationForm from "../../components/RegistrationForm";
+import LoginForm from "../../components/LoginForm";
 import environment from "../../environment";
 
 export default function Login() {
-  // TODO - add if state for width 500px
   const onGoogleLogin = () => {
     window.location.href = `${environment.apiUrl}/auth/google`;
   };
   const [visible, setVisible] = useState(true);
-  const warning = useRef(null);
+  const [smallScreen, setSmallScreen] = useState(false);
   const [accountNotExists, setAccountNotExists] = useState(false);
-  const showWarning = () => {
-    warning.current.show({
-      severity: "warn",
-      summary: "Warning",
-      detail: "You need to login for access to the website!",
-    });
+  onresize = () => {
+    if (window.innerWidth < 600) {
+      setSmallScreen(true);
+    } else {
+      setSmallScreen(false);
+    }
   };
   return (
     <>
-      <Toast ref={warning} />
       <Dialog
         modal
         visible={visible}
-        onHide={() => {
-          if (!visible) return;
-          showWarning();
-        }}
-        header={"Login"}
+        onHide={() => {}}
         draggable={false}
         resizable={false}
-        className="border-solid border-round-bottom border-3 border-bluegray-900"
+        className="border-solid border-round-bottom border-3 border-50"
         content={() => (
-          <div className="p-dialog-content">
-            <h1>{!accountNotExists ? "Login" : "Registration"}</h1>
+          <div className="p-dialog-content block">
             <form action="" onSubmit={() => setVisible(false)}>
               {accountNotExists ? <RegistrationForm /> : <LoginForm />}
-
-              <ToggleButton
-                onLabel="I already have an account"
-                offLabel="I don't have an account"
-                onIcon="pi pi-user"
-                offIcon="pi pi-user-plus"
-                checked={accountNotExists}
-                onChange={(e) => setAccountNotExists(e.value)}
-                className={accountNotExists ? "w-auto mr-2" : "w-full mb-3"}
-              />
-
-              <span
-                className={accountNotExists ? "w-auto ml-3" : "w-auto flex"}
+              <div
+                className={
+                  accountNotExists && !smallScreen ? "flex flex-wrap" : ""
+                }
               >
-                <Button
-                  label="Reset"
-                  type="reset"
-                  icon="pi pi-refresh"
-                  text
-                  raised
-                  className={accountNotExists ? "mr-2 w-auto" : "flex mr-2 w-5"}
+                <ToggleButton
+                  onLabel="I already have an account"
+                  offLabel="I don't have an account"
+                  onIcon="pi pi-user"
+                  offIcon="pi pi-user-plus"
+                  checked={accountNotExists}
+                  onChange={(e) => setAccountNotExists(e.value)}
+                  className={
+                    accountNotExists && !smallScreen
+                      ? "w-auto mr-2"
+                      : "w-full mb-3"
+                  }
                 />
-                <Button
-                  label="Submit"
-                  type="submit"
-                  icon="pi pi-check"
-                  className={accountNotExists ? "ml-2 w-auto" : "flex ml-3 w-6"}
-                />
-              </span>
+
+                <div
+                  className={
+                    accountNotExists && !smallScreen
+                      ? "w-auto ml-3"
+                      : "w-auto flex"
+                  }
+                >
+                  <Button
+                    label="Reset"
+                    type="reset"
+                    icon="pi pi-refresh"
+                    text
+                    raised
+                    className={
+                      accountNotExists && !smallScreen
+                        ? "mr-2 w-auto"
+                        : "flex mr-2 w-6"
+                    }
+                  />
+                  <Button
+                    label="Submit"
+                    type="submit"
+                    icon="pi pi-check"
+                    className={
+                      accountNotExists && !smallScreen
+                        ? "ml-2 w-auto"
+                        : "flex ml-3 w-6"
+                    }
+                  />
+                </div>
+              </div>
             </form>
-            <Divider type="solid" />
+            <Divider type="solid" align="center">
+              <strong>OR</strong>
+            </Divider>
 
             <Button
               icon="pi pi-google"
