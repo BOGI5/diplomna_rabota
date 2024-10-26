@@ -1,7 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { UserDef, useAuthState } from "../login/state/state";
+import { UserDef, useAuthState } from "../../contexts/AuthContext";
 
 const GoogleOAuthSuccessRedirect = () => {
   const [params] = useSearchParams();

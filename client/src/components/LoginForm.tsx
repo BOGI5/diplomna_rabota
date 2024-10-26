@@ -9,7 +9,12 @@ export default function LoginForm() {
         <span className="p-inputgroup-addon">
           <i className="pi pi-at"></i>
         </span>
-        <InputText placeholder="Email" type="email" id="email" required />
+        <InputText
+          placeholder="Email"
+          type="email"
+          id="register_email"
+          required
+        />
       </div>
       <div className="p-inputgroup my-3 flex">
         <span className="p-inputgroup-addon">
@@ -18,7 +23,7 @@ export default function LoginForm() {
         <Password
           placeholder="Password"
           feedback={false}
-          id="password"
+          id="register_password"
           required
         />
       </div>
