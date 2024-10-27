@@ -1,6 +1,6 @@
-import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateUserDto {
+export class CreateGoogleUserDto {
   @IsString()
   @IsNotEmpty()
   firstName: string;
@@ -14,6 +14,5 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
-  @IsNotEmpty()
-  password: string;
+  picture: string | null;
 }
