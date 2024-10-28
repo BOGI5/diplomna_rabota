@@ -6,15 +6,20 @@ import { ToggleButton } from "primereact/togglebutton";
 import RegistrationForm from "../../components/RegistrationForm";
 import LoginForm from "../../components/LoginForm";
 import environment from "../../environment";
-import AuthService from "../../services/authService";
+import axios from "axios";
 
 export default function Auth() {
-  const onGoogleLogin = () => {
-    window.location.href = `${environment.apiUrl}${environment.oauthUrl}`;
-  };
   const [visible, setVisible] = useState(true);
   const [smallScreen, setSmallScreen] = useState(false);
   const [accountNotExists, setAccountNotExists] = useState(false);
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+  });
+
   onresize = () => {
     if (window.innerWidth < 600) {
       setSmallScreen(true);
@@ -22,6 +27,7 @@ export default function Auth() {
       setSmallScreen(false);
     }
   };
+
   return (
     <Dialog
       modal
@@ -33,39 +39,41 @@ export default function Auth() {
       content={() => (
         <div className="p-dialog-content block">
           <form
-            onSubmit={() => {
+            onSubmit={(e) => {
+              e.preventDefault();
               setVisible(false);
-              if (accountNotExists) {
-                AuthService.registerUser({
-                  email: (
-                    document.getElementById(
-                      "register_email"
-                    ) as HTMLInputElement
-                  ).value,
-                  password: (
-                    document.getElementById(
-                      "register_password"
-                    ) as HTMLInputElement
-                  ).value,
-                  firstName: (
-                    document.getElementById("firstName") as HTMLInputElement
-                  ).value,
-                  lastName: (
-                    document.getElementById("lastName") as HTMLInputElement
-                  ).value,
-                });
-              } else {
-                AuthService.loginUser({
-                  email: (document.getElementById("email") as HTMLInputElement)
-                    .value,
-                  password: (
-                    document.getElementById("password") as HTMLInputElement
-                  ).value,
-                });
-              }
+              axios
+                .post(
+                  `${environment.apiUrl}${
+                    accountNotExists
+                      ? environment.createUserUrl
+                      : environment.loginUserUrl
+                  }`,
+                  formData
+                )
+                .then(
+                  (res) => {
+                    window.location.href = `${environment.handleJwtUrl}?jwtUser=${res.data.encodedUser}`;
+                  },
+                  (err) => {
+                    console.log(err);
+                  }
+                );
+            }}
+            onReset={() => {
+              setFormData({
+                email: "",
+                password: "",
+                firstName: "",
+                lastName: "",
+              });
             }}
           >
-            {accountNotExists ? <RegistrationForm /> : <LoginForm />}
+            {accountNotExists ? (
+              <RegistrationForm formData={formData} setFormData={setFormData} />
+            ) : (
+              <LoginForm formData={formData} setFormData={setFormData} />
+            )}
             <div
               className={
                 accountNotExists && !smallScreen ? "flex flex-wrap" : ""
@@ -129,7 +137,9 @@ export default function Auth() {
             size="large"
             className="mt-2 w-full"
             outlined
-            onClick={onGoogleLogin}
+            onClick={() => {
+              window.location.href = `${environment.apiUrl}${environment.oauthUrl}`;
+            }}
           />
         </div>
       )}

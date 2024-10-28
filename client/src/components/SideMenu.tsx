@@ -1,5 +1,6 @@
 import { Sidebar } from "primereact/sidebar";
 import { Avatar } from "primereact/avatar";
+import { useAuthState } from "../contexts/AuthContext";
 
 interface SideMenuProps {
   visible: boolean;
@@ -7,6 +8,8 @@ interface SideMenuProps {
 }
 
 export default function SideMenu({ visible, setVisible }: SideMenuProps) {
+  const { user } = useAuthState();
+
   return (
     <Sidebar
       visible={visible}
@@ -16,7 +19,7 @@ export default function SideMenu({ visible, setVisible }: SideMenuProps) {
           <a href="users/me">
             <Avatar icon="pi pi-user" shape="circle" size="large" />
           </a>
-          <h2>Your Name</h2>
+          <h2>{user?.firstName + " " + user?.lastName}</h2>
         </>
       }
       onHide={() => setVisible(false)}

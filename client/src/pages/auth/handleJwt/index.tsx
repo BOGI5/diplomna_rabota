@@ -1,9 +1,9 @@
 import { jwtDecode } from "jwt-decode";
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { UserDef, useAuthState } from "../../contexts/AuthContext";
+import { UserDef, useAuthState } from "../../../contexts/AuthContext";
 
-const GoogleOAuthSuccessRedirect = () => {
+const HandleJwt = () => {
   const [params] = useSearchParams();
   const { setUser } = useAuthState();
   const navigate = useNavigate();
@@ -23,4 +23,4 @@ const GoogleOAuthSuccessRedirect = () => {
   return <div>Logging in...</div>;
 };
 
-export default GoogleOAuthSuccessRedirect;
+export default HandleJwt;

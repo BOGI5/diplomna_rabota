@@ -2,7 +2,8 @@ import { createContext, useContext, useState, ReactNode } from "react";
 
 export interface UserDef {
   id: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
   picture: string | null;
 }
 

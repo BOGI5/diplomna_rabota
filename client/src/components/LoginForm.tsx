@@ -1,7 +1,22 @@
 import { InputText } from "primereact/inputtext";
 import { Password } from "primereact/password";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  formData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+  };
+  setFormData: (data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+  }) => void;
+}
+
+export default function LoginForm(props: LoginFormProps) {
   return (
     <>
       <h1>Login</h1>
@@ -10,9 +25,12 @@ export default function LoginForm() {
           <i className="pi pi-at"></i>
         </span>
         <InputText
+          value={props.formData.email}
           placeholder="Email"
           type="email"
-          id="register_email"
+          onChange={(e) =>
+            props.setFormData({ ...props.formData, email: e.target.value })
+          }
           required
         />
       </div>
@@ -21,9 +39,12 @@ export default function LoginForm() {
           <i className="pi pi-lock"></i>
         </span>
         <Password
+          value={props.formData.password}
           placeholder="Password"
           feedback={false}
-          id="register_password"
+          onChange={(e) =>
+            props.setFormData({ ...props.formData, password: e.target.value })
+          }
           required
         />
       </div>

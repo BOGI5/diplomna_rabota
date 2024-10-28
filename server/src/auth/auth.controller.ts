@@ -43,9 +43,7 @@ export class AuthController {
     @Res() res: Response
   ) {
     const { encodedUser } = await this.authService.signIn(loginUserDto, res);
-    return res.redirect(
-      `${process.env.GOOGLE_REDIRECT_URL_CLIENT_REACT}?jwtUser=${encodedUser}`
-    );
+    res.send({ encodedUser });
   }
 
   @Post("sign-up")
@@ -54,9 +52,7 @@ export class AuthController {
     @Res() res: Response
   ) {
     const { encodedUser } = await this.authService.signUp(createUserDto, res);
-    return res.redirect(
-      `${process.env.GOOGLE_REDIRECT_URL_CLIENT_REACT}?jwtUser=${encodedUser}`
-    );
+    res.send({ encodedUser });
   }
 
   @UseGuards(JwtGuard)
