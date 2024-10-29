@@ -5,6 +5,7 @@ import { useAuthState } from "./contexts/AuthContext";
 import Auth from "./pages/auth";
 import HandleJWT from "./pages/auth/handleJwt";
 import Header from "./components/Header";
+import { SignFormProvider } from "./contexts/SignFormContext";
 
 function App() {
   const { user } = useAuthState();
@@ -14,7 +15,13 @@ function App() {
         <Route path="auth" element={<Auth />} />
         <Route path="auth/handle-jwt" element={<HandleJWT />} />
       </Routes>
-      {user ? <Header /> : <Auth />}
+      {user ? (
+        <Header />
+      ) : (
+        <SignFormProvider>
+          <Auth />
+        </SignFormProvider>
+      )}
     </>
   );
 }

@@ -1,32 +1,22 @@
-import { useState } from "react";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
 import { ToggleButton } from "primereact/togglebutton";
+import { useSignState } from "../../contexts/SignFormContext";
 import RegistrationForm from "../../components/RegistrationForm";
 import LoginForm from "../../components/LoginForm";
-import environment from "../../environment";
-import axios from "axios";
 
 export default function Auth() {
-  const [visible, setVisible] = useState(true);
-  const [smallScreen, setSmallScreen] = useState(false);
-  const [accountNotExists, setAccountNotExists] = useState(false);
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    firstName: "",
-    lastName: "",
-  });
-
-  onresize = () => {
-    if (window.innerWidth < 600) {
-      setSmallScreen(true);
-    } else {
-      setSmallScreen(false);
-    }
-  };
+  const {
+    visible,
+    setFormData,
+    formData,
+    accountNotExists,
+    setAccountNotExists,
+    handleSubmit,
+    smallScreen,
+    onGoogleSignIn,
+  } = useSignState();
 
   return (
     <Dialog
@@ -38,42 +28,8 @@ export default function Auth() {
       className="border-solid border-round-bottom border-3 border-50"
       content={() => (
         <div className="p-dialog-content block">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setVisible(false);
-              axios
-                .post(
-                  `${environment.apiUrl}${
-                    accountNotExists
-                      ? environment.createUserUrl
-                      : environment.loginUserUrl
-                  }`,
-                  formData
-                )
-                .then(
-                  (res) => {
-                    window.location.href = `${environment.handleJwtUrl}?jwtUser=${res.data.encodedUser}`;
-                  },
-                  (err) => {
-                    console.log(err);
-                  }
-                );
-            }}
-            onReset={() => {
-              setFormData({
-                email: "",
-                password: "",
-                firstName: "",
-                lastName: "",
-              });
-            }}
-          >
-            {accountNotExists ? (
-              <RegistrationForm formData={formData} setFormData={setFormData} />
-            ) : (
-              <LoginForm formData={formData} setFormData={setFormData} />
-            )}
+          <form onSubmit={(e) => handleSubmit(e)}>
+            {accountNotExists ? <RegistrationForm /> : <LoginForm />}
             <div
               className={
                 accountNotExists && !smallScreen ? "flex flex-wrap" : ""
@@ -85,7 +41,14 @@ export default function Auth() {
                 onIcon="pi pi-user"
                 offIcon="pi pi-user-plus"
                 checked={accountNotExists}
-                onChange={(e) => setAccountNotExists(e.value)}
+                onChange={(e) => {
+                  setAccountNotExists(e.value);
+                  setFormData({
+                    ...formData,
+                    password: { ...formData.password, error: false },
+                    confirmPassword: { value: "", error: false },
+                  });
+                }}
                 className={
                   accountNotExists && !smallScreen
                     ? "w-auto mr-2"
@@ -137,9 +100,7 @@ export default function Auth() {
             size="large"
             className="mt-2 w-full"
             outlined
-            onClick={() => {
-              window.location.href = `${environment.apiUrl}${environment.oauthUrl}`;
-            }}
+            onClick={onGoogleSignIn}
           />
         </div>
       )}

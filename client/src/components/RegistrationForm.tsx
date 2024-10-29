@@ -1,22 +1,10 @@
+import { useSignState } from "../contexts/SignFormContext";
 import { InputText } from "primereact/inputtext";
 import { Password } from "primereact/password";
 
-interface RegistrationFormProps {
-  formData: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  };
-  setFormData: (data: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  }) => void;
-}
+export default function RegistrationForm() {
+  const { formData, setFormData } = useSignState();
 
-export default function RegistrationForm(props: RegistrationFormProps) {
   return (
     <>
       <h1>Registration</h1>
@@ -25,19 +13,33 @@ export default function RegistrationForm(props: RegistrationFormProps) {
           <i className="pi pi-user"></i>
         </span>
         <InputText
-          value={props.formData.firstName}
+          value={formData.firstName.value}
           placeholder="First name"
           onChange={(e) =>
-            props.setFormData({ ...props.formData, firstName: e.target.value })
+            setFormData({
+              ...formData,
+              firstName: {
+                value: e.target.value,
+                error: false,
+              },
+            })
           }
+          className={formData.firstName.error ? "p-invalid" : ""}
           required
         />
         <InputText
-          value={props.formData.lastName}
+          value={formData.lastName.value}
           placeholder="Last name"
           onChange={(e) =>
-            props.setFormData({ ...props.formData, lastName: e.target.value })
+            setFormData({
+              ...formData,
+              lastName: {
+                value: e.target.value,
+                error: false,
+              },
+            })
           }
+          className={formData.lastName.error ? "p-invalid" : ""}
           required
         />
       </div>
@@ -46,12 +48,19 @@ export default function RegistrationForm(props: RegistrationFormProps) {
           <i className="pi pi-at"></i>
         </span>
         <InputText
-          value={props.formData.email}
+          value={formData.email.value}
           placeholder="Email"
           type="email"
           onChange={(e) =>
-            props.setFormData({ ...props.formData, email: e.target.value })
+            setFormData({
+              ...formData,
+              email: {
+                value: e.target.value,
+                error: false,
+              },
+            })
           }
+          className={formData.email.error ? "p-invalid" : ""}
           required
         />
       </div>
@@ -60,15 +69,45 @@ export default function RegistrationForm(props: RegistrationFormProps) {
           <i className="pi pi-lock"></i>
         </span>
         <Password
-          value={props.formData.password}
+          value={formData.password.value}
           placeholder="Password"
           feedback={false}
           onChange={(e) =>
-            props.setFormData({ ...props.formData, password: e.target.value })
+            setFormData({
+              ...formData,
+              password: {
+                value: e.target.value,
+                error: false,
+              },
+              confirmPassword: {
+                value: formData.confirmPassword.value,
+                error: false,
+              },
+            })
           }
+          className={formData.password.error ? "p-invalid" : ""}
           required
         />
-        <Password placeholder="Confirm password" feedback={false} required />
+        <Password
+          value={formData.confirmPassword.value}
+          placeholder="Confirm password"
+          feedback={false}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              password: {
+                value: formData.password.value,
+                error: false,
+              },
+              confirmPassword: {
+                value: e.target.value,
+                error: false,
+              },
+            })
+          }
+          className={formData.confirmPassword.error ? "p-invalid" : ""}
+          required
+        />
       </div>
     </>
   );

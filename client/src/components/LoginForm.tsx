@@ -1,22 +1,10 @@
+import { useSignState } from "../contexts/SignFormContext";
 import { InputText } from "primereact/inputtext";
 import { Password } from "primereact/password";
 
-interface LoginFormProps {
-  formData: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  };
-  setFormData: (data: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  }) => void;
-}
+export default function LoginForm() {
+  const { formData, setFormData } = useSignState();
 
-export default function LoginForm(props: LoginFormProps) {
   return (
     <>
       <h1>Login</h1>
@@ -25,12 +13,16 @@ export default function LoginForm(props: LoginFormProps) {
           <i className="pi pi-at"></i>
         </span>
         <InputText
-          value={props.formData.email}
+          value={formData.email.value}
           placeholder="Email"
           type="email"
           onChange={(e) =>
-            props.setFormData({ ...props.formData, email: e.target.value })
+            setFormData({
+              ...formData,
+              email: { value: e.target.value, error: false },
+            })
           }
+          className={formData.email.error ? "p-invalid" : ""}
           required
         />
       </div>
@@ -39,12 +31,19 @@ export default function LoginForm(props: LoginFormProps) {
           <i className="pi pi-lock"></i>
         </span>
         <Password
-          value={props.formData.password}
+          value={formData.password.value}
           placeholder="Password"
           feedback={false}
           onChange={(e) =>
-            props.setFormData({ ...props.formData, password: e.target.value })
+            setFormData({
+              ...formData,
+              password: {
+                value: e.target.value,
+                error: false,
+              },
+            })
           }
+          className={formData.password.error ? "p-invalid" : ""}
           required
         />
       </div>

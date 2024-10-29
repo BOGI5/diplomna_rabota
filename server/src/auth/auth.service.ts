@@ -4,20 +4,18 @@ import {
   InternalServerErrorException,
   Logger,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
 import { CookieOptions, Response } from "express";
+import { CreateUserDto } from "src/users/dto/create-user.dto";
+import { LoginUserDto } from "src/users/dto/login-user.dto";
 import { UsersService } from "src/users/users.service";
-
 import { User } from "src/users/entities/user.entity";
-
 import { GoogleUser } from "./interfaces/auth.interfaces";
 import {
   COOKIE_NAMES,
   expiresTimeTokenMilliseconds,
 } from "./constants/auth.constants";
-import { CreateUserDto } from "src/users/dto/create-user.dto";
-import { LoginUserDto } from "src/users/dto/login-user.dto";
 
 @Injectable()
 export class AuthService {
@@ -48,8 +46,7 @@ export class AuthService {
     res: Response
   ): Promise<{ encodedUser: string }> {
     const user = await this.usersService.findByEmail(userDto.email);
-    if (!user) throw new BadRequestException("Invalid credentials");
-    if (userDto.password !== user.password)
+    if (!user || userDto.password !== user.password)
       throw new BadRequestException("Invalid credentials");
     const encodedUser = this.encodeUserDataAsJwt(user);
     this.setJwtTokenToCookies(res, user);
