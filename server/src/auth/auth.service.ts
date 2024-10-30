@@ -47,7 +47,7 @@ export class AuthService {
   ): Promise<{ encodedUser: string }> {
     const user = await this.usersService.findByEmail(userDto.email);
     if (!user || userDto.password !== user.password)
-      throw new BadRequestException("Invalid credentials");
+      throw new BadRequestException(["Invalid credentials"]);
     const encodedUser = this.encodeUserDataAsJwt(user);
     this.setJwtTokenToCookies(res, user);
     return {
@@ -60,7 +60,7 @@ export class AuthService {
     res: Response
   ): Promise<{ encodedUser: string }> {
     const existingUser = await this.usersService.findByEmail(userDto.email);
-    if (existingUser) throw new BadRequestException("User already exists");
+    if (existingUser) throw new BadRequestException(["User already exists"]);
     const user = await this.usersService.create(userDto);
     const encodedUser = this.encodeUserDataAsJwt(user);
     this.setJwtTokenToCookies(res, user);

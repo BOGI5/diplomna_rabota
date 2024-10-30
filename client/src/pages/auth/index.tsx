@@ -4,6 +4,7 @@ import { Divider } from "primereact/divider";
 import { ToggleButton } from "primereact/togglebutton";
 import { useSignState } from "../../contexts/SignFormContext";
 import RegistrationForm from "../../components/RegistrationForm";
+import { useNotification } from "../../contexts/NotificationContext";
 import LoginForm from "../../components/LoginForm";
 
 export default function Auth() {
@@ -17,6 +18,7 @@ export default function Auth() {
     smallScreen,
     onGoogleSignIn,
   } = useSignState();
+  const { showMessage, clear } = useNotification();
 
   return (
     <Dialog
@@ -28,7 +30,7 @@ export default function Auth() {
       className="border-solid border-round-bottom border-3 border-50"
       content={() => (
         <div className="p-dialog-content block">
-          <form onSubmit={(e) => handleSubmit(e)}>
+          <form onSubmit={(e) => handleSubmit(e, showMessage)} onChange={clear}>
             {accountNotExists ? <RegistrationForm /> : <LoginForm />}
             <div
               className={
@@ -44,7 +46,9 @@ export default function Auth() {
                 onChange={(e) => {
                   setAccountNotExists(e.value);
                   setFormData({
-                    ...formData,
+                    firstName: { value: "", error: false },
+                    lastName: { value: "", error: false },
+                    email: { ...formData.email, error: false },
                     password: { ...formData.password, error: false },
                     confirmPassword: { value: "", error: false },
                   });

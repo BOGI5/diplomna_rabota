@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import environment from "../environment";
+import { ToastMessage } from "primereact/toast";
 
 export interface SignStateDef {
   visible: boolean;
@@ -29,7 +30,10 @@ export interface SignStateDef {
     firstName: { value: string; error: boolean };
     lastName: { value: string; error: boolean };
   }) => void;
-  handleSubmit: (e: FormEvent<HTMLFormElement>) => void;
+  handleSubmit: (
+    e: FormEvent<HTMLFormElement>,
+    notification: (props: ToastMessage) => void
+  ) => void;
   onGoogleSignIn: () => void;
 }
 
@@ -64,12 +68,21 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
     window.location.href = `${environment.apiUrl}${environment.oauthUrl}`;
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (
+    e: FormEvent<HTMLFormElement>,
+    notification: (props: ToastMessage) => void
+  ) => {
     e.preventDefault();
     if (
       formData.password.value !== formData.confirmPassword.value &&
       accountNotExists
     ) {
+      notification({
+        severity: "error",
+        summary: "Error",
+        detail: "Passwords do not match",
+        sticky: true,
+      });
       setFormData({
         ...formData,
         password: { ...formData.password, error: true },
@@ -99,30 +112,42 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
         (res) => {
           window.location.href = `${environment.handleJwtUrl}?jwtUser=${res.data.encodedUser}`;
         },
-        (err) =>
-          handleSubmitError(err.response.statusCode, err.response.data.message)
+        (err) => {
+          notification({
+            severity: "error",
+            summary: "Error",
+            detail: err.response.data.message[0],
+            sticky: true,
+          });
+          console.log(err.response);
+          handleSubmitError(
+            err.response.data.statusCode,
+            err.response.data.message[0]
+          );
+        }
       );
   };
 
   const handleSubmitError = (code: number, message: string) => {
+    console.log(code, message);
     if (code === 400) {
-      if (message.includes("email")) {
+      if (message.toLocaleLowerCase().includes("email")) {
         setFormData({
           ...formData,
           email: { ...formData.email, error: true },
         });
-      } else if (message.includes("password")) {
+      } else if (message.toLocaleLowerCase().includes("password")) {
         setFormData({
           ...formData,
           password: { ...formData.password, error: true },
         });
-      } else if (message.includes("invalid credentials")) {
+      } else if (message.toLocaleLowerCase().includes("invalid credentials")) {
         setFormData({
           ...formData,
           email: { ...formData.email, error: true },
           password: { ...formData.password, error: true },
         });
-      } else if (message.includes("user already exists")) {
+      } else if (message.toLocaleLowerCase().includes("user already exists")) {
         setFormData({
           email: { ...formData.email, error: true },
           password: { ...formData.password, error: true },
