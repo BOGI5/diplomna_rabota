@@ -11,7 +11,8 @@ import {
 import { Response } from "express";
 import { AuthService } from "./auth.service";
 import { GoogleOAuthGuard } from "./guards/google-oauth.guard";
-import { JwtGuard } from "./guards/jwt-auth.guard";
+import { AccessTokenGuard } from "./guards/accessToken.guard";
+import { RefreshTokenGuard } from "./guards/refreshToken.guard";
 import { LoginUserDto } from "src/users/dto/login-user.dto";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
 
@@ -28,12 +29,9 @@ export class AuthController {
   @UseGuards(GoogleOAuthGuard)
   @Get("google-auth-redirect")
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
-    const { encodedUser } = await this.authService.signInWithGoogle(
-      req.user,
-      res
-    );
+    const user = await this.authService.signInWithGoogle(req.user, res);
     return res.redirect(
-      `${process.env.GOOGLE_REDIRECT_URL_CLIENT_REACT}?jwtUser=${encodedUser}`
+      `${process.env.GOOGLE_REDIRECT_URL_CLIENT_REACT}?jwtUser=${user}`
     );
   }
 
@@ -42,8 +40,8 @@ export class AuthController {
     @Body(ValidationPipe) loginUserDto: LoginUserDto,
     @Res() res: Response
   ) {
-    const { encodedUser } = await this.authService.signIn(loginUserDto, res);
-    res.send({ encodedUser });
+    const user = await this.authService.signIn(loginUserDto, res);
+    res.send(user);
   }
 
   @Post("sign-up")
@@ -51,13 +49,21 @@ export class AuthController {
     @Body(ValidationPipe) createUserDto: CreateUserDto,
     @Res() res: Response
   ) {
-    const { encodedUser } = await this.authService.signUp(createUserDto, res);
-    res.send({ encodedUser });
+    const user = await this.authService.signUp(createUserDto, res);
+    res.send(user);
   }
 
-  @UseGuards(JwtGuard)
-  @Get("protected-route")
-  async protectedAuthRoute() {
-    return "I am protected";
+  @UseGuards(AccessTokenGuard)
+  @Get("sign-out")
+  async signOut(@Req() req, @Res() res: Response) {
+    this.authService.signOut(req.user.id, res);
+    res.send("Signed out");
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Get("refresh")
+  async refreshTokens(@Req() req, @Res() res: Response) {
+    const user = await this.authService.refreshTokens(req.user.id, res);
+    res.send(user);
   }
 }

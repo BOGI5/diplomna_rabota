@@ -20,4 +20,10 @@ export class User {
 
   @Column({ nullable: true })
   picture: string | null;
+
+  @Column({ nullable: true })
+  refreshToken: string | null;
+
+  @Column({ nullable: true })
+  accessToken: string | null;
 }

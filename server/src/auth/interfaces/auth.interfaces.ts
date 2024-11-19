@@ -7,9 +7,7 @@ export interface GoogleUser {
   refreshToken: string;
 }
 
-export interface UserFromJwt {
+export type UserFromJwt = {
   id: string;
-  sub: {
-    email: string;
-  };
-}
+  sub: string;
+};

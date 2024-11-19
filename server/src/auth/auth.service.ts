@@ -1,110 +1,146 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { CookieOptions, Response } from "express";
+import { Response } from "express";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from "@nestjs/common";
+import { compareSync, genSaltSync, hashSync } from "bcrypt-ts";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { LoginUserDto } from "src/users/dto/login-user.dto";
 import { UsersService } from "src/users/users.service";
 import { User } from "src/users/entities/user.entity";
 import { GoogleUser } from "./interfaces/auth.interfaces";
-import {
-  COOKIE_NAMES,
-  expiresTimeTokenMilliseconds,
-} from "./constants/auth.constants";
+import { TOKENS_EXPIRATION_TIME } from "./constants/auth.constants";
 
 @Injectable()
 export class AuthService {
   constructor(
-    private configService: ConfigService,
     private jwtService: JwtService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private configService: ConfigService
   ) {}
 
-  async signInWithGoogle(
-    user: GoogleUser,
-    res: Response
-  ): Promise<{
-    encodedUser: string;
-  }> {
+  async signInWithGoogle(user: GoogleUser, res: Response): Promise<User> {
     if (!user) throw new BadRequestException("Unauthenticated");
     let existingUser = await this.usersService.findByEmail(user.email);
     if (!existingUser) existingUser = await this.registerGoogleUser(user);
-    const encodedUser = this.encodeUserDataAsJwt(existingUser);
-    this.setJwtTokenToCookies(res, existingUser);
-    return {
-      encodedUser,
-    };
+    await this.generateTokens(existingUser);
+    // this.setTokensToHeaders(res, accessToken, refreshToken);
+    return existingUser;
   }
 
-  async signIn(
-    userDto: LoginUserDto,
-    res: Response
-  ): Promise<{ encodedUser: string }> {
-    const user = await this.usersService.findByEmail(userDto.email);
-    if (!user || userDto.password !== user.password)
+  async signIn(userDto: LoginUserDto, res: Response): Promise<User> {
+    let user = await this.usersService.findByEmail(userDto.email);
+    if (!user || !this.compareHashedData(userDto.password, user.password))
       throw new BadRequestException(["Invalid credentials"]);
-    const encodedUser = this.encodeUserDataAsJwt(user);
-    this.setJwtTokenToCookies(res, user);
-    return {
-      encodedUser,
-    };
+    await this.generateTokens(user);
+    user = await this.usersService.findByEmail(user.email);
+    user.password = null;
+    // await this.setTokensToHeaders(res, accessToken, refreshToken);
+    return user;
   }
 
-  async signUp(
-    userDto: CreateUserDto,
-    res: Response
-  ): Promise<{ encodedUser: string }> {
+  async signUp(userDto: CreateUserDto, res: Response): Promise<User> {
     const existingUser = await this.usersService.findByEmail(userDto.email);
     if (existingUser) throw new BadRequestException(["User already exists"]);
-    const user = await this.usersService.create(userDto);
-    const encodedUser = this.encodeUserDataAsJwt(user);
-    this.setJwtTokenToCookies(res, user);
-    return {
-      encodedUser,
-    };
+    let user = await this.usersService.create({
+      ...userDto,
+      password: this.hashData(userDto.password),
+    });
+    await this.generateTokens(user);
+    user = await this.usersService.findByEmail(user.email);
+    user.password = null;
+    // await this.setTokensToHeaders(res, accessToken, refreshToken);
+    return user;
+  }
+
+  async signOut(id: number, res: Response): Promise<void> {
+    const user = await this.usersService.findOne(id);
+    this.usersService.update(id, {
+      ...user,
+      accessToken: null,
+      refreshToken: null,
+    });
   }
 
   private async registerGoogleUser(user: GoogleUser): Promise<User> {
-    try {
-      return await this.usersService.createGoogleUser({
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        picture: user.picture,
-      });
-    } catch (error) {
-      Logger.error(error);
-      throw new InternalServerErrorException();
+    return await this.usersService.createGoogleUser({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      picture: user.picture,
+    });
+  }
+
+  private hashData(data: string): string {
+    const salt = genSaltSync(10);
+    return hashSync(data, salt);
+  }
+
+  private compareHashedData(data: string, hashedData: string): boolean {
+    return compareSync(data, hashedData);
+  }
+
+  async refreshTokens(id: number, res: Response): Promise<User> {
+    let user = await this.usersService.findOne(id);
+    await this.generateTokens(user);
+    user = await this.usersService.findOne(id);
+    user.password = null;
+    // this.setTokensToHeaders(res, accessToken, refreshToken);
+    return user;
+  }
+
+  private async generateTokens(user: User): Promise<void> {
+    if (user.accessToken && user.refreshToken) {
+      try {
+        this.jwtService.verify(user.accessToken, {
+          secret: this.configService.get<string>("JWT_ACCESS_SECRET"),
+        });
+        return;
+      } catch (error) {
+        this.usersService.update(user.id, {
+          ...user,
+          accessToken: null,
+          refreshToken: null,
+        });
+      }
     }
-  }
 
-  private encodeUserDataAsJwt(user: User) {
-    const { id, email, firstName, lastName, picture } = user;
-    return this.jwtService.sign({ id, email, firstName, lastName, picture });
-  }
+    const { id, email } = user;
 
-  setJwtTokenToCookies(res: Response, user: User) {
-    const expirationDateInMilliseconds =
-      new Date().getTime() + expiresTimeTokenMilliseconds;
-    const cookieOptions: CookieOptions = {
-      httpOnly: true, // this ensures that the cookie cannot be accessed through JavaScript!
-      expires: new Date(expirationDateInMilliseconds),
-    };
-
-    res.cookie(
-      COOKIE_NAMES.JWT,
-      this.jwtService.sign({
-        id: user.id,
-        sub: {
-          email: user.email,
+    await this.usersService.update(user.id, {
+      ...user,
+      accessToken: await this.jwtService.signAsync(
+        {
+          id: id,
+          sub: email,
         },
-      }),
-      cookieOptions
-    );
+        {
+          secret: this.configService.get<string>("JWT_ACCESS_SECRET"),
+          expiresIn: TOKENS_EXPIRATION_TIME.ACCESS_TOKEN,
+        }
+      ),
+      refreshToken: await this.jwtService.signAsync(
+        {
+          id: id,
+          sub: email,
+        },
+        {
+          secret: this.configService.get<string>("JWT_REFRESH_SECRET"),
+          expiresIn: TOKENS_EXPIRATION_TIME.REFRESH_TOKEN,
+        }
+      ),
+    });
   }
+
+  // private async setTokensToHeaders(
+  //   res: Response,
+  //   accessToken: string,
+  //   refreshToken: string
+  // ): Promise<void> {
+  //   // set access token to headers
+  //   res.setHeader("Authorization", `Bearer ${accessToken}`);
+  // }
 }
