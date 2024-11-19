@@ -1,4 +1,6 @@
+import axios from "axios";
 import { createContext, useContext, useState, ReactNode } from "react";
+import environment from "../environment";
 
 export interface UserDef {
   id: string;
@@ -29,6 +31,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeUser = () => {
+    axios.get(`${environment.apiUrl}${environment.signOutUrl}`, {
+      headers: {
+        Authorization: `Bearer ${user?.accessToken}`,
+      },
+    });
     setUserState(null);
     localStorage.removeItem("user");
   };

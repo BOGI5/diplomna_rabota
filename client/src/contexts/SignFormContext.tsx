@@ -97,9 +97,7 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
     axios
       .post(
         `${environment.apiUrl}${
-          accountNotExists
-            ? environment.createUserUrl
-            : environment.loginUserUrl
+          accountNotExists ? environment.signUpUrl : environment.signInUrl
         }`,
         {
           email: formData.email.value,

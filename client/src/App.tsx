@@ -3,7 +3,7 @@ import "primeicons/primeicons.css";
 import { Route, Routes } from "react-router-dom";
 import { useAuthState } from "./contexts/AuthContext";
 import Auth from "./pages/auth";
-import HandleJWT from "./pages/auth/handleJwt";
+import HandleJWT from "./pages/auth/handleGoogleOauth";
 import Header from "./components/Header";
 import { SignFormProvider } from "./contexts/SignFormContext";
 import Home from "./pages/home";
@@ -22,7 +22,7 @@ function App() {
             </SignFormProvider>
           }
         />
-        <Route path="auth/handle-jwt" element={<HandleJWT />} />
+        <Route path="auth/handle-google-oauth" element={<HandleJWT />} />
         <Route path="/" element={<Home />} />
       </Routes>
     </>

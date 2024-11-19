@@ -31,7 +31,7 @@ export class AuthController {
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
     const user = await this.authService.signInWithGoogle(req.user, res);
     return res.redirect(
-      `${process.env.GOOGLE_REDIRECT_URL_CLIENT_REACT}?jwtUser=${user}`
+      `${process.env.GOOGLE_REDIRECT_URL_CLIENT_REACT}?user=${encodeURIComponent(JSON.stringify(user))}`
     );
   }
 

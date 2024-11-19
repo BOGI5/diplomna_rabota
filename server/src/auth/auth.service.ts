@@ -27,6 +27,7 @@ export class AuthService {
     let existingUser = await this.usersService.findByEmail(user.email);
     if (!existingUser) existingUser = await this.registerGoogleUser(user);
     await this.generateTokens(existingUser);
+    existingUser = await this.usersService.findByEmail(user.email);
     // this.setTokensToHeaders(res, accessToken, refreshToken);
     return existingUser;
   }
