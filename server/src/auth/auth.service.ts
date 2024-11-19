@@ -1,11 +1,7 @@
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { Response } from "express";
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-} from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { compareSync, genSaltSync, hashSync } from "bcrypt-ts";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { LoginUserDto } from "src/users/dto/login-user.dto";
