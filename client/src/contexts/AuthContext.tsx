@@ -5,6 +5,8 @@ export interface UserDef {
   firstName: string;
   lastName: string;
   picture: string | null;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface AuthStateDef {

@@ -8,6 +8,7 @@ import {
 } from "react";
 import environment from "../environment";
 import { ToastMessage } from "primereact/toast";
+import { useAuthState } from "./AuthContext";
 
 export interface SignStateDef {
   visible: boolean;
@@ -56,6 +57,8 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
     lastName: { value: "", error: false },
   });
 
+  const { setUser } = useAuthState();
+
   onresize = () => {
     if (window.innerWidth < 600) {
       setSmallScreen(true);
@@ -102,7 +105,6 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
           email: formData.email.value,
           password: formData.password.value,
           ...(accountNotExists && {
-            confirmPassword: formData.confirmPassword.value,
             firstName: formData.firstName.value,
             lastName: formData.lastName.value,
           }),
@@ -110,13 +112,17 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
       )
       .then(
         (res) => {
-          window.location.href = `${environment.handleJwtUrl}?jwtUser=${res.data.encodedUser}`;
+          setUser(res.data);
+          window.location.href = `${environment.clientUrl}`;
         },
         (err) => {
           notification({
             severity: "error",
             summary: "Error",
-            detail: err.response.data.message[0],
+            detail:
+              err.response.data.message.typeof == "string"
+                ? err.response.data.message
+                : err.response.data.message[0],
             sticky: true,
           });
           console.log(err.response);
