@@ -8,7 +8,10 @@ import { LoginUserDto } from "src/users/dto/login-user.dto";
 import { UsersService } from "src/users/users.service";
 import { User } from "src/users/entities/user.entity";
 import { GoogleUser } from "./interfaces/auth.interfaces";
-import { TOKENS_EXPIRATION_TIME } from "./constants/auth.constants";
+import {
+  COOKIE_NAMES,
+  TOKENS_EXPIRATION_TIME,
+} from "./constants/auth.constants";
 
 @Injectable()
 export class AuthService {
@@ -18,28 +21,65 @@ export class AuthService {
     private configService: ConfigService
   ) {}
 
-  async signInWithGoogle(user: GoogleUser, res: Response): Promise<User> {
+  async signInWithGoogle(
+    user: GoogleUser,
+    res: Response
+  ): Promise<{
+    firstName: string;
+    lastName: string;
+    picture: string | null;
+    id: number;
+  }> {
     if (!user) throw new BadRequestException("Unauthenticated");
     let existingUser = await this.usersService.findByEmail(user.email);
     if (!existingUser) existingUser = await this.registerGoogleUser(user);
     await this.generateTokens(existingUser);
     existingUser = await this.usersService.findByEmail(user.email);
-    // this.setTokensToHeaders(res, accessToken, refreshToken);
-    return existingUser;
+    await this.setTokensToCookies(
+      res,
+      existingUser.accessToken,
+      existingUser.refreshToken
+    );
+    return {
+      firstName: existingUser.firstName,
+      lastName: existingUser.lastName,
+      picture: existingUser.picture,
+      id: existingUser.id,
+    };
   }
 
-  async signIn(userDto: LoginUserDto, res: Response): Promise<User> {
+  async signIn(
+    userDto: LoginUserDto,
+    res: Response
+  ): Promise<{
+    firstName: string;
+    lastName: string;
+    picture: string | null;
+    id: number;
+  }> {
     let user = await this.usersService.findByEmail(userDto.email);
     if (!user || !this.compareHashedData(userDto.password, user.password))
       throw new BadRequestException(["Invalid credentials"]);
     await this.generateTokens(user);
     user = await this.usersService.findByEmail(user.email);
-    user.password = null;
-    // await this.setTokensToHeaders(res, accessToken, refreshToken);
-    return user;
+    await this.setTokensToCookies(res, user.accessToken, user.refreshToken);
+    return {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      picture: user.picture,
+      id: user.id,
+    };
   }
 
-  async signUp(userDto: CreateUserDto, res: Response): Promise<User> {
+  async signUp(
+    userDto: CreateUserDto,
+    res: Response
+  ): Promise<{
+    firstName: string;
+    lastName: string;
+    picture: string | null;
+    id: number;
+  }> {
     const existingUser = await this.usersService.findByEmail(userDto.email);
     if (existingUser) throw new BadRequestException(["User already exists"]);
     let user = await this.usersService.create({
@@ -48,13 +88,18 @@ export class AuthService {
     });
     await this.generateTokens(user);
     user = await this.usersService.findByEmail(user.email);
-    user.password = null;
-    // await this.setTokensToHeaders(res, accessToken, refreshToken);
-    return user;
+    await this.setTokensToCookies(res, user.accessToken, user.refreshToken);
+    return {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      picture: user.picture,
+      id: user.id,
+    };
   }
 
   async signOut(id: number, res: Response): Promise<void> {
     const user = await this.usersService.findOne(id);
+    await this.clearTokensFromCookies(res);
     this.usersService.update(id, {
       ...user,
       accessToken: null,
@@ -80,13 +125,12 @@ export class AuthService {
     return compareSync(data, hashedData);
   }
 
-  async refreshTokens(id: number, res: Response): Promise<User> {
+  async refreshTokens(id: number, res: Response) {
     let user = await this.usersService.findOne(id);
     await this.generateTokens(user);
     user = await this.usersService.findOne(id);
-    user.password = null;
-    // this.setTokensToHeaders(res, accessToken, refreshToken);
-    return user;
+    await this.clearTokensFromCookies(res);
+    await this.setTokensToCookies(res, user.accessToken, user.refreshToken);
   }
 
   private async generateTokens(user: User): Promise<void> {
@@ -132,12 +176,29 @@ export class AuthService {
     });
   }
 
-  // private async setTokensToHeaders(
-  //   res: Response,
-  //   accessToken: string,
-  //   refreshToken: string
-  // ): Promise<void> {
-  //   // set access token to headers
-  //   res.setHeader("Authorization", `Bearer ${accessToken}`);
-  // }
+  private async setTokensToCookies(
+    res: Response,
+    accessToken: string,
+    refreshToken: string
+  ): Promise<void> {
+    res.cookie(COOKIE_NAMES.ACCESS_TOKEN, accessToken, {
+      httpOnly: true,
+      secure: true,
+      expires: new Date(
+        Date.now() + TOKENS_EXPIRATION_TIME.COOKIE_EXPIRATION_TIME
+      ),
+    });
+    res.cookie(COOKIE_NAMES.REFRESH_TOKEN, refreshToken, {
+      httpOnly: true,
+      secure: true,
+      expires: new Date(
+        Date.now() + TOKENS_EXPIRATION_TIME.COOKIE_EXPIRATION_TIME
+      ),
+    });
+  }
+
+  private async clearTokensFromCookies(res: Response): Promise<void> {
+    res.clearCookie(COOKIE_NAMES.ACCESS_TOKEN);
+    res.clearCookie(COOKIE_NAMES.REFRESH_TOKEN);
+  }
 }

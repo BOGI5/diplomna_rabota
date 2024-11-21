@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { UserFromJwt } from "../interfaces/auth.interfaces";
 import { StrategiesEnum } from "../constants/strategies.constants";
 import { UsersService } from "src/users/users.service";
+import { COOKIE_NAMES } from "../constants/auth.constants";
 
 @Injectable()
 export class AccessTokenStrategy extends PassportStrategy(
@@ -12,7 +13,11 @@ export class AccessTokenStrategy extends PassportStrategy(
 ) {
   constructor(private usersService: UsersService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req) => {
+          return req.cookies[COOKIE_NAMES.ACCESS_TOKEN];
+        },
+      ]),
       secretOrKey: process.env.JWT_ACCESS_SECRET,
       ignoreExpiration: false,
     });

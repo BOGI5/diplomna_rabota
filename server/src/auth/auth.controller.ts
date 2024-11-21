@@ -56,14 +56,14 @@ export class AuthController {
   @UseGuards(AccessTokenGuard)
   @Get("sign-out")
   async signOut(@Req() req, @Res() res: Response) {
-    this.authService.signOut(req.user.id, res);
-    res.send("Signed out");
+    await this.authService.signOut(req.user.id, res);
+    res.send();
   }
 
   @UseGuards(RefreshTokenGuard)
   @Get("refresh")
   async refreshTokens(@Req() req, @Res() res: Response) {
-    const user = await this.authService.refreshTokens(req.user.id, res);
-    res.send(user);
+    await this.authService.refreshTokens(req.user.id, res);
+    res.send();
   }
 }

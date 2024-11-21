@@ -14,6 +14,8 @@ async function bootstrap() {
       "Content-Type",
       "Accept",
       "Authorization",
+      "Set-Cookie",
+      "Cookie",
     ],
     credentials: true,
   });
