@@ -106,7 +106,8 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
             firstName: formData.firstName.value,
             lastName: formData.lastName.value,
           }),
-        }
+        },
+        { withCredentials: true }
       )
       .then(
         (res) => {

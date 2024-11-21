@@ -10,9 +10,7 @@ export default function Home() {
   }
   axios
     .get(`${environment.apiUrl}/users`, {
-      headers: {
-        Authorization: `Bearer ${user?.accessToken}`,
-      },
+      withCredentials: true,
     })
     .then((res) => {
       console.log(res.data);

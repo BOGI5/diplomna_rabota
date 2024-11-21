@@ -7,8 +7,6 @@ export interface UserDef {
   firstName: string;
   lastName: string;
   picture: string | null;
-  accessToken: string;
-  refreshToken: string;
 }
 
 export interface AuthStateDef {
@@ -32,9 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const removeUser = () => {
     axios.get(`${environment.apiUrl}${environment.signOutUrl}`, {
-      headers: {
-        Authorization: `Bearer ${user?.accessToken}`,
-      },
+      withCredentials: true,
     });
     setUserState(null);
     localStorage.removeItem("user");
