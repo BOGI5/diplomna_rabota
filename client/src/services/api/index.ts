@@ -26,7 +26,7 @@ export default class ApiService {
           return err;
         }
         await this.refresh();
-        return await axios.get(`${this.baseUrl}${url}`);
+        return await axios.get(`${this.baseUrl}${url}`, this.requestSettings);
       });
   }
 
@@ -42,7 +42,7 @@ export default class ApiService {
           return err;
         }
         await this.refresh();
-        return await axios.post(`${this.baseUrl}${url}`, data);
+        return await axios.post(`${this.baseUrl}${url}`, data, this.requestSettings);
       });
   }
 }
