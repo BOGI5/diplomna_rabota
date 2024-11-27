@@ -1,4 +1,4 @@
-import axios from "axios";
+import ApiService from "../services/api";
 import {
   createContext,
   FormEvent,
@@ -94,11 +94,9 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     setVisible(false);
-    axios
+    new ApiService()
       .post(
-        `${environment.apiUrl}${
-          accountNotExists ? environment.signUpUrl : environment.signInUrl
-        }`,
+        `${accountNotExists ? environment.signUpUrl : environment.signInUrl}`,
         {
           email: formData.email.value,
           password: formData.password.value,
@@ -106,8 +104,7 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
             firstName: formData.firstName.value,
             lastName: formData.lastName.value,
           }),
-        },
-        { withCredentials: true }
+        }
       )
       .then(
         (res) => {

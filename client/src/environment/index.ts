@@ -5,6 +5,7 @@ const environment = {
   signUpUrl: "/auth/sign-up",
   signInUrl: "/auth/sign-in",
   signOutUrl: "/auth/sign-out",
+  refreshCredentialsUrl: "/auth/refresh",
   // Client url
   clientUrl: "http://localhost:5173",
   clientAuthUrl: "/auth",

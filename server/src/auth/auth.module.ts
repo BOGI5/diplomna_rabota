@@ -16,13 +16,6 @@ import { UsersModule } from "src/users/users.module";
     UsersModule,
     TypeOrmModule.forFeature([User]),
     JwtModule.register({}),
-    // JwtModule.registerAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: async (configService: ConfigService) => ({
-    //     secret: configService.get("JWT_SECRET"),
-    //   }),
-    //   inject: [ConfigService],
-    // }),
   ],
   controllers: [AuthController],
   providers: [

@@ -9,5 +9,5 @@ export interface GoogleUser {
 
 export type UserFromJwt = {
   id: string;
-  sub: string;
+  email: string;
 };

@@ -1,37 +1,45 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, Req, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
+import { ConfigService } from "@nestjs/config";
 import { ExtractJwt, Strategy } from "passport-jwt";
+import { UserFromJwt } from "../interfaces/auth.interfaces";
 import { StrategiesEnum } from "../constants/strategies.constants";
-import { UsersService } from "src/users/users.service";
 import { COOKIE_NAMES } from "../constants/auth.constants";
+import { UsersService } from "src/users/users.service";
+import { User } from "src/users/entities/user.entity";
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
   Strategy,
   StrategiesEnum.JWT_REFRESH
 ) {
-  constructor(private usersService: UsersService) {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req) => {
           return req.cookies[COOKIE_NAMES.REFRESH_TOKEN];
         },
       ]),
-      secretOrKey: process.env.JWT_REFRESH_SECRET,
+      secretOrKey: configService.get<string>("JWT_REFRESH_SECRET"),
       ignoreExpiration: false,
       passReqToCallback: true,
     });
   }
 
-  async validate(payload: any) {
-    const user = await this.usersService.findByEmail(payload.sub);
+  async validate(@Req() req, payload: UserFromJwt): Promise<User> {
+    const user = await this.usersService.findByEmail(payload.email);
+    const accessToken = req.cookies[COOKIE_NAMES.ACCESS_TOKEN];
     if (
       !user ||
       !user.refreshToken ||
-      user.refreshToken.match(ExtractJwt.fromAuthHeaderAsBearerToken())
+      !accessToken ||
+      user.accessToken !== accessToken
     ) {
       throw new UnauthorizedException("Unauthorized");
     }
-    return { ...payload, refreshToken: user.refreshToken };
+    return user;
   }
 }

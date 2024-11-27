@@ -1,6 +1,6 @@
+import { Response } from "express";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { Response } from "express";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { compareSync, genSaltSync, hashSync } from "bcrypt-ts";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
@@ -35,7 +35,7 @@ export class AuthService {
     if (!existingUser) existingUser = await this.registerGoogleUser(user);
     await this.generateTokens(existingUser);
     existingUser = await this.usersService.findByEmail(user.email);
-    await this.setTokensToCookies(
+    this.setTokensToCookies(
       res,
       existingUser.accessToken,
       existingUser.refreshToken
@@ -59,10 +59,10 @@ export class AuthService {
   }> {
     let user = await this.usersService.findByEmail(userDto.email);
     if (!user || !this.compareHashedData(userDto.password, user.password))
-      throw new BadRequestException(["Invalid credentials"]);
+      throw new BadRequestException("Invalid credentials");
     await this.generateTokens(user);
     user = await this.usersService.findByEmail(user.email);
-    await this.setTokensToCookies(res, user.accessToken, user.refreshToken);
+    this.setTokensToCookies(res, user.accessToken, user.refreshToken);
     return {
       firstName: user.firstName,
       lastName: user.lastName,
@@ -81,14 +81,14 @@ export class AuthService {
     id: number;
   }> {
     const existingUser = await this.usersService.findByEmail(userDto.email);
-    if (existingUser) throw new BadRequestException(["User already exists"]);
+    if (existingUser) throw new BadRequestException("User already exists");
     let user = await this.usersService.create({
       ...userDto,
       password: this.hashData(userDto.password),
     });
     await this.generateTokens(user);
     user = await this.usersService.findByEmail(user.email);
-    await this.setTokensToCookies(res, user.accessToken, user.refreshToken);
+    this.setTokensToCookies(res, user.accessToken, user.refreshToken);
     return {
       firstName: user.firstName,
       lastName: user.lastName,
@@ -99,7 +99,7 @@ export class AuthService {
 
   async signOut(id: number, res: Response): Promise<void> {
     const user = await this.usersService.findOne(id);
-    await this.clearTokensFromCookies(res);
+    this.clearTokensFromCookies(res);
     this.usersService.update(id, {
       ...user,
       accessToken: null,
@@ -129,44 +129,35 @@ export class AuthService {
     let user = await this.usersService.findOne(id);
     await this.generateTokens(user);
     user = await this.usersService.findOne(id);
-    await this.clearTokensFromCookies(res);
-    await this.setTokensToCookies(res, user.accessToken, user.refreshToken);
+    this.clearTokensFromCookies(res);
+    this.setTokensToCookies(res, user.accessToken, user.refreshToken);
   }
 
   private async generateTokens(user: User): Promise<void> {
-    if (user.accessToken && user.refreshToken) {
-      try {
-        this.jwtService.verify(user.accessToken, {
-          secret: this.configService.get<string>("JWT_ACCESS_SECRET"),
-        });
-        return;
-      } catch (error) {
-        this.usersService.update(user.id, {
-          ...user,
-          accessToken: null,
-          refreshToken: null,
-        });
-      }
-    }
+    await this.usersService.update(user.id, {
+      ...user,
+      accessToken: null,
+      refreshToken: null,
+    });
 
     const { id, email } = user;
 
     await this.usersService.update(user.id, {
       ...user,
-      accessToken: await this.jwtService.signAsync(
+      accessToken: this.jwtService.sign(
         {
           id: id,
-          sub: email,
+          email: email,
         },
         {
           secret: this.configService.get<string>("JWT_ACCESS_SECRET"),
           expiresIn: TOKENS_EXPIRATION_TIME.ACCESS_TOKEN,
         }
       ),
-      refreshToken: await this.jwtService.signAsync(
+      refreshToken: this.jwtService.sign(
         {
           id: id,
-          sub: email,
+          email: email,
         },
         {
           secret: this.configService.get<string>("JWT_REFRESH_SECRET"),
@@ -176,28 +167,28 @@ export class AuthService {
     });
   }
 
-  private async setTokensToCookies(
+  private setTokensToCookies(
     res: Response,
     accessToken: string,
     refreshToken: string
-  ): Promise<void> {
+  ): void {
     res.cookie(COOKIE_NAMES.ACCESS_TOKEN, accessToken, {
       httpOnly: true,
-      secure: true,
+      // secure: true,
       expires: new Date(
-        Date.now() + TOKENS_EXPIRATION_TIME.COOKIE_EXPIRATION_TIME
+        new Date().getTime() + TOKENS_EXPIRATION_TIME.COOKIE_EXPIRATION_TIME
       ),
     });
     res.cookie(COOKIE_NAMES.REFRESH_TOKEN, refreshToken, {
       httpOnly: true,
-      secure: true,
+      // secure: true,
       expires: new Date(
-        Date.now() + TOKENS_EXPIRATION_TIME.COOKIE_EXPIRATION_TIME
+        new Date().getTime() + TOKENS_EXPIRATION_TIME.COOKIE_EXPIRATION_TIME
       ),
     });
   }
 
-  private async clearTokensFromCookies(res: Response): Promise<void> {
+  private clearTokensFromCookies(res: Response): void {
     res.clearCookie(COOKIE_NAMES.ACCESS_TOKEN);
     res.clearCookie(COOKIE_NAMES.REFRESH_TOKEN);
   }
