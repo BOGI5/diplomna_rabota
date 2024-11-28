@@ -32,9 +32,12 @@ export class RefreshTokenStrategy extends PassportStrategy(
   async validate(@Req() req, payload: UserFromJwt): Promise<User> {
     const user = await this.usersService.findByEmail(payload.email);
     const accessToken = req.cookies[COOKIE_NAMES.ACCESS_TOKEN];
+    const refreshToken = req.cookies[COOKIE_NAMES.REFRESH_TOKEN];
     if (
       !user ||
       !user.refreshToken ||
+      !refreshToken ||
+      user.refreshToken !== refreshToken ||
       !accessToken ||
       user.accessToken !== accessToken
     ) {

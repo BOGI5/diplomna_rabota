@@ -42,7 +42,11 @@ export default class ApiService {
           return err;
         }
         await this.refresh();
-        return await axios.post(`${this.baseUrl}${url}`, data, this.requestSettings);
+        return await axios.post(
+          `${this.baseUrl}${url}`,
+          data,
+          this.requestSettings
+        );
       });
   }
 }
