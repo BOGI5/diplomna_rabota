@@ -58,7 +58,7 @@ export class AuthService {
     id: number;
   }> {
     let user = await this.usersService.findByEmail(userDto.email);
-    if (!user || !user.password !this.compareHashedData(userDto.password, user.password))
+    if (!user || !user.password || !this.compareHashedData(userDto.password, user.password))
       throw new BadRequestException("Invalid credentials");
     await this.generateTokens(user);
     user = await this.usersService.findByEmail(user.email);
