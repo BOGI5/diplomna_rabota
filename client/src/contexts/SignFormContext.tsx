@@ -112,26 +112,25 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
           window.location.href = `${environment.clientUrl}`;
         },
         (err) => {
+          let errorMessage: string = Array.isArray(err.response.data.message)
+            ? err.response.data.message[0]
+            : err.response.data.message;
+
+          errorMessage =
+            errorMessage.charAt(0).toUpperCase() + errorMessage.slice(1);
+
           notification({
             severity: "error",
             summary: "Error",
-            detail:
-              err.response.data.message.typeof == "string"
-                ? err.response.data.message
-                : err.response.data.message[0],
+            detail: errorMessage,
             sticky: true,
           });
-          console.log(err.response);
-          handleSubmitError(
-            err.response.data.statusCode,
-            err.response.data.message[0]
-          );
+          handleSubmitError(err.response.data.statusCode, errorMessage);
         }
       );
   };
 
   const handleSubmitError = (code: number, message: string) => {
-    console.log(code, message);
     if (code === 400) {
       if (message.toLocaleLowerCase().includes("email")) {
         setFormData({
@@ -164,7 +163,6 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
     } else if (code === 500) {
       // handle server error
     }
-    console.log(message);
     setVisible(true);
   };
 

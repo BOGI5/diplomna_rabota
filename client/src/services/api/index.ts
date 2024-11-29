@@ -7,13 +7,14 @@ export default class ApiService {
     withCredentials: true,
   };
 
-  private async refresh(): Promise<AxiosResponse> {
-    return await axios
+  private async refresh(): Promise<void> {
+    await axios
       .get(
         `${this.baseUrl}${environment.refreshCredentialsUrl}`,
         this.requestSettings
       )
       .catch(() => {
+        console.error("Failed to refresh credentials");
         throw new Error("Failed to refresh credentials");
       });
   }
@@ -22,11 +23,12 @@ export default class ApiService {
     return await axios
       .get(`${this.baseUrl}${url}`, this.requestSettings)
       .catch(async (err) => {
-        if (err.response.status !== 401) {
-          return err;
+        if (err.response.status === 401) {
+          await this.refresh();
+          return await axios.get(`${this.baseUrl}${url}`, this.requestSettings);
         }
-        await this.refresh();
-        return await axios.get(`${this.baseUrl}${url}`, this.requestSettings);
+        console.error(err);
+        throw err;
       });
   }
 
@@ -37,16 +39,52 @@ export default class ApiService {
     return await axios
       .post(`${this.baseUrl}${url}`, data, this.requestSettings)
       .catch(async (err) => {
-        if (err.response.status !== 401) {
-          console.log(err);
-          return err;
+        if (err.response.status === 401) {
+          await this.refresh();
+          return await axios.post(
+            `${this.baseUrl}${url}`,
+            data,
+            this.requestSettings
+          );
         }
-        await this.refresh();
-        return await axios.post(
-          `${this.baseUrl}${url}`,
-          data,
-          this.requestSettings
-        );
+        console.error(err);
+        throw err;
+      });
+  }
+
+  public async patch(
+    url: string,
+    data: { [key: string]: unknown }
+  ): Promise<AxiosResponse> {
+    return await axios
+      .patch(`${this.baseUrl}${url}`, data, this.requestSettings)
+      .catch(async (err) => {
+        if (err.response.status === 401) {
+          await this.refresh();
+          return await axios.patch(
+            `${this.baseUrl}${url}`,
+            data,
+            this.requestSettings
+          );
+        }
+        console.error(err);
+        throw err;
+      });
+  }
+
+  public async delete(url: string): Promise<AxiosResponse> {
+    return await axios
+      .delete(`${this.baseUrl}${url}`, this.requestSettings)
+      .catch(async (err) => {
+        if (err.response.status === 401) {
+          await this.refresh();
+          return await axios.delete(
+            `${this.baseUrl}${url}`,
+            this.requestSettings
+          );
+        }
+        console.error(err);
+        throw err;
       });
   }
 }

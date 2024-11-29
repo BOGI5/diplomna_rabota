@@ -21,15 +21,7 @@ export class AuthService {
     private configService: ConfigService
   ) {}
 
-  async signInWithGoogle(
-    user: GoogleUser,
-    res: Response
-  ): Promise<{
-    firstName: string;
-    lastName: string;
-    picture: string | null;
-    id: number;
-  }> {
+  async signInWithGoogle(user: GoogleUser, res: Response): Promise<User> {
     if (!user) throw new BadRequestException("Unauthenticated");
     let existingUser = await this.usersService.findByEmail(user.email);
     if (!existingUser) existingUser = await this.registerGoogleUser(user);
@@ -40,46 +32,24 @@ export class AuthService {
       existingUser.accessToken,
       existingUser.refreshToken
     );
-    return {
-      firstName: existingUser.firstName,
-      lastName: existingUser.lastName,
-      picture: existingUser.picture,
-      id: existingUser.id,
-    };
+    return existingUser;
   }
 
-  async signIn(
-    userDto: LoginUserDto,
-    res: Response
-  ): Promise<{
-    firstName: string;
-    lastName: string;
-    picture: string | null;
-    id: number;
-  }> {
+  async signIn(userDto: LoginUserDto, res: Response): Promise<User> {
     let user = await this.usersService.findByEmail(userDto.email);
-    if (!user || !user.password || !this.compareHashedData(userDto.password, user.password))
+    if (
+      !user ||
+      !user.password ||
+      !this.compareHashedData(userDto.password, user.password)
+    )
       throw new BadRequestException("Invalid credentials");
     await this.generateTokens(user);
     user = await this.usersService.findByEmail(user.email);
     this.setTokensToCookies(res, user.accessToken, user.refreshToken);
-    return {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      picture: user.picture,
-      id: user.id,
-    };
+    return user;
   }
 
-  async signUp(
-    userDto: CreateUserDto,
-    res: Response
-  ): Promise<{
-    firstName: string;
-    lastName: string;
-    picture: string | null;
-    id: number;
-  }> {
+  async signUp(userDto: CreateUserDto, res: Response): Promise<User> {
     const existingUser = await this.usersService.findByEmail(userDto.email);
     if (existingUser) throw new BadRequestException("User already exists");
     let user = await this.usersService.create({
@@ -89,22 +59,13 @@ export class AuthService {
     await this.generateTokens(user);
     user = await this.usersService.findByEmail(user.email);
     this.setTokensToCookies(res, user.accessToken, user.refreshToken);
-    return {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      picture: user.picture,
-      id: user.id,
-    };
+    return user;
   }
 
   async signOut(id: number, res: Response): Promise<void> {
     const user = await this.usersService.findOne(id);
     this.clearTokensFromCookies(res);
-    this.usersService.update(id, {
-      ...user,
-      accessToken: null,
-      refreshToken: null,
-    });
+    this.usersService.updateTokens(user.id, null, null);
   }
 
   private async registerGoogleUser(user: GoogleUser): Promise<User> {
@@ -134,17 +95,13 @@ export class AuthService {
   }
 
   private async generateTokens(user: User): Promise<void> {
-    await this.usersService.update(user.id, {
-      ...user,
-      accessToken: null,
-      refreshToken: null,
-    });
+    await this.usersService.updateTokens(user.id, null, null);
 
     const { id, email } = user;
 
-    await this.usersService.update(user.id, {
-      ...user,
-      accessToken: this.jwtService.sign(
+    await this.usersService.updateTokens(
+      user.id,
+      this.jwtService.sign(
         {
           id: id,
           email: email,
@@ -154,7 +111,7 @@ export class AuthService {
           expiresIn: TOKENS_EXPIRATION_TIME.ACCESS_TOKEN,
         }
       ),
-      refreshToken: this.jwtService.sign(
+      this.jwtService.sign(
         {
           id: id,
           email: email,
@@ -163,8 +120,8 @@ export class AuthService {
           secret: this.configService.get<string>("JWT_REFRESH_SECRET"),
           expiresIn: TOKENS_EXPIRATION_TIME.REFRESH_TOKEN,
         }
-      ),
-    });
+      )
+    );
   }
 
   private setTokensToCookies(
