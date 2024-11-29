@@ -9,6 +9,8 @@ import {
   ValidationPipe,
 } from "@nestjs/common";
 import { Response } from "express";
+import { plainToInstance } from "class-transformer";
+import { User } from "src/users/entities/user.entity";
 import { AuthService } from "./auth.service";
 import { GoogleOAuthGuard } from "./guards/google-oauth.guard";
 import { AccessTokenGuard } from "./guards/accessToken.guard";
@@ -27,7 +29,9 @@ export class AuthController {
   @UseGuards(GoogleOAuthGuard)
   @Get("google-auth-redirect")
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
-    const user = await this.authService.signInWithGoogle(req.user, res);
+    let user = await this.authService.signInWithGoogle(req.user, res);
+    user = plainToInstance(User, user);
+    delete user.email;
     return res.redirect(
       `${process.env.GOOGLE_REDIRECT_URL_CLIENT_REACT}?user=${encodeURIComponent(JSON.stringify(user))}`
     );
@@ -38,7 +42,9 @@ export class AuthController {
     @Body(ValidationPipe) loginUserDto: LoginUserDto,
     @Res() res: Response
   ) {
-    const user = await this.authService.signIn(loginUserDto, res);
+    let user = await this.authService.signIn(loginUserDto, res);
+    user = plainToInstance(User, user);
+    delete user.email;
     res.send(user);
   }
 
@@ -47,7 +53,9 @@ export class AuthController {
     @Body(ValidationPipe) createUserDto: CreateUserDto,
     @Res() res: Response
   ) {
-    const user = await this.authService.signUp(createUserDto, res);
+    let user = await this.authService.signUp(createUserDto, res);
+    user = plainToInstance(User, user);
+    delete user.email;
     res.send(user);
   }
 
