@@ -6,6 +6,7 @@ export interface UserDef {
   id: string;
   firstName: string;
   lastName: string;
+  email?: string;
   picture: string | null;
 }
 
