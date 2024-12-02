@@ -7,6 +7,7 @@ const environment = {
   signInUrl: "/auth/sign-in",
   signOutUrl: "/auth/sign-out",
   refreshCredentialsUrl: "/auth/refresh",
+  updatePasswordUrl: "/auth/update-password",
   //  User url
   getAll: "/users",
   getOne: "/users/:id",

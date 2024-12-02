@@ -10,9 +10,11 @@ import { InputText } from "primereact/inputtext";
 import { useNotification } from "../../contexts/NotificationContext";
 import { Avatar } from "primereact/avatar";
 import { FileUpload } from "primereact/fileupload";
+import ChangePassword from "../../components/ChangePassword";
 
 export default function Profile() {
   const apiService = new ApiService();
+  const [changePassword, setChangePassword] = useState(false);
   const { setUser } = useAuthState();
   const { showMessage } = useNotification();
   const [edit, setEdit] = useState(false);
@@ -166,11 +168,15 @@ export default function Profile() {
             <InputText placeholder="Email" value={userData?.email} disabled />
           </div>
 
+          <ChangePassword
+            visible={changePassword}
+            setVisible={setChangePassword}
+          />
           <Button
             severity="danger"
             label="Change password"
             outlined
-            disabled={!edit}
+            onClick={() => setChangePassword(true)}
           />
         </div>
 
