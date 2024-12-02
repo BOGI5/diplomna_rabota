@@ -44,14 +44,10 @@ export default function Profile() {
         <>
           <div
             className={`flex flex-row justify-content-${
-              smallScreen ? (!edit ? "between" : "center") : "between"
+              smallScreen && edit ? "center" : "between"
             } mt-2`}
           >
-            {smallScreen ? (
-              !edit && <h1 className="mx-5">Profile</h1>
-            ) : (
-              <h1 className="mx-5">Profile</h1>
-            )}
+            {!(smallScreen && edit) && <h1 className="mx-5">Profile</h1>}
             <div className="mx-5 my-3 gap-5 flex">
               {edit && (
                 <Button
@@ -106,7 +102,7 @@ export default function Profile() {
         </>
       }
       footer={
-        <div className="flex flex-row justify-content-center gap-5">
+        <div className="flex flex-row justify-content-center gap-5 mt-3">
           <Button
             label="Delete account"
             icon="pi pi-trash"
