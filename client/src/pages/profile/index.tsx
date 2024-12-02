@@ -1,16 +1,16 @@
-import { useAuthState, UserDef } from "../../contexts/AuthContext";
-import ApiService from "../../services/api";
 import { Card } from "primereact/card";
-import { ToggleButton } from "primereact/togglebutton";
+import { Avatar } from "primereact/avatar";
 import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
-import { useEffect, useState } from "react";
-import environment from "../../environment";
 import { InputText } from "primereact/inputtext";
-import { useNotification } from "../../contexts/NotificationContext";
-import { Avatar } from "primereact/avatar";
 import { FileUpload } from "primereact/fileupload";
+import { ToggleButton } from "primereact/togglebutton";
+import { useAuthState, UserDef } from "../../contexts/AuthContext";
+import { useNotification } from "../../contexts/NotificationContext";
 import ChangePassword from "../../components/ChangePassword";
+import ApiService from "../../services/api";
+import environment from "../../environment";
+import { useEffect, useState } from "react";
 
 export default function Profile() {
   const apiService = new ApiService();
