@@ -17,7 +17,7 @@ export class UsersService {
     private userRepository: Repository<User>
   ) {}
 
-  async createGoogleUser(
+  public async createGoogleUser(
     createGoogleUserDto: CreateGoogleUserDto
   ): Promise<User> {
     const validationPipe = new ValidationPipe();
@@ -28,7 +28,7 @@ export class UsersService {
     return this.userRepository.save(createGoogleUserDto);
   }
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  public async create(createUserDto: CreateUserDto): Promise<User> {
     const validationPipe = new ValidationPipe();
     await validationPipe.transform(createUserDto, {
       type: "body",
@@ -37,23 +37,31 @@ export class UsersService {
     return this.userRepository.save(createUserDto);
   }
 
-  findAll(): Promise<User[]> {
+  public findAll(): Promise<User[]> {
     return this.userRepository.find();
   }
 
-  findOne(id: number): Promise<User> {
+  public findOne(id: number): Promise<User> {
     return this.userRepository.findOne({ where: { id } });
   }
 
-  findByEmail(email: string): Promise<User> {
+  public findByEmail(email: string): Promise<User> {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  async updateTokens(id: number, accessToken: string, refreshToken: string) {
+  public async updateTokens(
+    id: number,
+    accessToken: string,
+    refreshToken: string
+  ) {
     return this.userRepository.update(id, { accessToken, refreshToken });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  public async updatePassword(id: number, password: string) {
+    return this.userRepository.update(id, { password });
+  }
+
+  public async update(id: number, updateUserDto: UpdateUserDto) {
     const validationPipe = new ValidationPipe();
     await validationPipe.transform(updateUserDto, {
       type: "body",

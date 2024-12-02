@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Req,
   Res,
@@ -17,6 +18,7 @@ import { AccessTokenGuard } from "./guards/accessToken.guard";
 import { RefreshTokenGuard } from "./guards/refreshToken.guard";
 import { LoginUserDto } from "src/users/dto/login-user.dto";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
+import { UpdatePasswordDto } from "./dto/update-password.dto";
 
 @Controller("auth")
 export class AuthController {
@@ -70,6 +72,17 @@ export class AuthController {
   @Get("refresh")
   async refreshTokens(@Req() req, @Res() res: Response) {
     await this.authService.refreshTokens(req.user.id, res);
+    res.send();
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Patch("update-password")
+  async updatePassword(
+    @Req() req,
+    @Body(ValidationPipe) updatePasswordDto: UpdatePasswordDto,
+    @Res() res: Response
+  ) {
+    await this.authService.updatePassword(req.user.id, updatePasswordDto);
     res.send();
   }
 }
