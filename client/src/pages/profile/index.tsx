@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 export default function Profile() {
   const apiService = new ApiService();
   const [changePassword, setChangePassword] = useState(false);
-  const { setUser } = useAuthState();
+  const { setUser, deleteUser } = useAuthState();
   const { showMessage } = useNotification();
   const [edit, setEdit] = useState(false);
   const [smallScreen, setSmallScreen] = useState(window.innerWidth < 960);
@@ -126,11 +126,7 @@ export default function Profile() {
                 icon: "pi pi-exclamation-triangle",
                 acceptClassName: "p-button-danger",
                 defaultFocus: "reject",
-                accept: () => {
-                  apiService.delete(environment.deleteSelf).then(() => {
-                    window.location.href = "/auth";
-                  });
-                },
+                accept: () => deleteUser(),
               });
             }}
           />

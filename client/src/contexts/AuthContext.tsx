@@ -13,7 +13,8 @@ export interface UserDef {
 export interface AuthStateDef {
   user: UserDef | null;
   setUser: (data: UserDef) => void;
-  removeUser: () => void;
+  logoutUser: () => void;
+  deleteUser: () => void;
 }
 
 const AuthContext = createContext<AuthStateDef | undefined>(undefined);
@@ -24,19 +25,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
+  const apiService = new ApiService();
+
   const setUser = (user: UserDef) => {
     setUserState(user);
     localStorage.setItem("user", JSON.stringify(user));
   };
 
-  const removeUser = () => {
-    new ApiService().get(`${environment.signOutUrl}`);
+  const logoutUser = () => {
+    apiService.get(`${environment.signOutUrl}`);
+    setUserState(null);
+    localStorage.removeItem("user");
+  };
+
+  const deleteUser = () => {
+    apiService.delete(`${environment.deleteSelf}`);
     setUserState(null);
     localStorage.removeItem("user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, removeUser }}>
+    <AuthContext.Provider value={{ user, setUser, logoutUser, deleteUser }}>
       {children}
     </AuthContext.Provider>
   );

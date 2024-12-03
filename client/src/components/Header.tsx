@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 
 export default function Header() {
   const { user } = useAuthState();
-  const { removeUser } = useAuthState();
+  const { logoutUser } = useAuthState();
   const [username, setUsername] = useState<string>(
     `${user?.firstName} ${user?.lastName}`
   );
@@ -69,7 +69,7 @@ export default function Header() {
               {
                 label: "Logout",
                 icon: "pi pi-sign-out",
-                command: () => removeUser(),
+                command: () => logoutUser(),
               },
               {
                 label: "Profile",
