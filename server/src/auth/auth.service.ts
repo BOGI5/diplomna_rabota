@@ -6,6 +6,7 @@ import { compareSync, genSaltSync, hashSync } from "bcrypt-ts";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { LoginUserDto } from "src/users/dto/login-user.dto";
 import { UsersService } from "src/users/users.service";
+import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { User } from "src/users/entities/user.entity";
 import { GoogleUser } from "./interfaces/auth.interfaces";
 import {
@@ -21,7 +22,10 @@ export class AuthService {
     private configService: ConfigService
   ) {}
 
-  async signInWithGoogle(user: GoogleUser, res: Response): Promise<User> {
+  public async signInWithGoogle(
+    user: GoogleUser,
+    res: Response
+  ): Promise<User> {
     if (!user) throw new BadRequestException("Unauthenticated");
     let existingUser = await this.usersService.findByEmail(user.email);
     if (!existingUser) existingUser = await this.registerGoogleUser(user);
@@ -35,7 +39,7 @@ export class AuthService {
     return existingUser;
   }
 
-  async signIn(userDto: LoginUserDto, res: Response): Promise<User> {
+  public async signIn(userDto: LoginUserDto, res: Response): Promise<User> {
     let user = await this.usersService.findByEmail(userDto.email);
     if (
       !user ||
@@ -49,7 +53,7 @@ export class AuthService {
     return user;
   }
 
-  async signUp(userDto: CreateUserDto, res: Response): Promise<User> {
+  public async signUp(userDto: CreateUserDto, res: Response): Promise<User> {
     const existingUser = await this.usersService.findByEmail(userDto.email);
     if (existingUser) throw new BadRequestException("User already exists");
     let user = await this.usersService.create({
@@ -62,10 +66,35 @@ export class AuthService {
     return user;
   }
 
-  async signOut(id: number, res: Response): Promise<void> {
+  public async signOut(id: number, res: Response): Promise<void> {
     const user = await this.usersService.findOne(id);
     this.clearTokensFromCookies(res);
     this.usersService.updateTokens(user.id, null, null);
+  }
+
+  public async refreshTokens(id: number, res: Response) {
+    let user = await this.usersService.findOne(id);
+    await this.generateTokens(user);
+    user = await this.usersService.findOne(id);
+    this.clearTokensFromCookies(res);
+    this.setTokensToCookies(res, user.accessToken, user.refreshToken);
+  }
+
+  public async updatePassword(
+    id: number,
+    updatePasswordDto: UpdatePasswordDto
+  ): Promise<void> {
+    const user = await this.usersService.findOne(id);
+    if (
+      !user.password ||
+      !this.compareHashedData(updatePasswordDto.currentPassword, user.password)
+    ) {
+      throw new BadRequestException("Invalid credentials");
+    }
+    await this.usersService.updatePassword(
+      id,
+      this.hashData(updatePasswordDto.newPassword)
+    );
   }
 
   private async registerGoogleUser(user: GoogleUser): Promise<User> {
@@ -84,14 +113,6 @@ export class AuthService {
 
   private compareHashedData(data: string, hashedData: string): boolean {
     return compareSync(data, hashedData);
-  }
-
-  async refreshTokens(id: number, res: Response) {
-    let user = await this.usersService.findOne(id);
-    await this.generateTokens(user);
-    user = await this.usersService.findOne(id);
-    this.clearTokensFromCookies(res);
-    this.setTokensToCookies(res, user.accessToken, user.refreshToken);
   }
 
   private async generateTokens(user: User): Promise<void> {

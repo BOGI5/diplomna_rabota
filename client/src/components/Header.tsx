@@ -3,7 +3,7 @@ import { Menubar } from "primereact/menubar";
 import { SplitButton } from "primereact/splitbutton";
 import { useAuthState } from "../contexts/AuthContext";
 import environment from "../environment";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Header() {
   const { user } = useAuthState();
@@ -11,13 +11,9 @@ export default function Header() {
   const [username, setUsername] = useState<string>(
     `${user?.firstName} ${user?.lastName}`
   );
-  onresize = () => {
-    if (screen.width < 500) {
-      setUsername(`${user?.firstName[0]}${user?.lastName[0]}`);
-    } else {
-      setUsername(`${user?.firstName} ${user?.lastName}`);
-    }
-  };
+  useEffect(() => {
+    setUsername(`${user?.firstName} ${user?.lastName}`);
+  }, [user]);
   return (
     <Menubar
       model={[
