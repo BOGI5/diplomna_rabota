@@ -6,7 +6,8 @@ import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { User } from "./users/entities/user.entity";
-import { ProjectModule } from "./project/project.module";
+import { ProjectsModule } from './projects/projects.module';
+import { MembersModule } from './members/members.module';
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import { ProjectModule } from "./project/project.module";
       autoLoadEntities: true,
       entities: [User],
     }),
-    ProjectModule,
+    ProjectsModule,
+    MembersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
