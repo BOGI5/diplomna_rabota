@@ -1,6 +1,7 @@
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
+import { confirmPopup } from "primereact/confirmpopup";
 import { useState } from "react";
 import ApiService from "../services/api";
 import environment from "../environment";
@@ -16,16 +17,23 @@ export default function ChangePassword({
   setVisible,
 }: ChangePasswordProps) {
   const [passwords, setPasswords] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirm: "",
+    current: { password: "", error: false },
+    new: { password: "", error: false },
+    confirm: { password: "", error: false },
   });
   const { showMessage } = useNotification();
 
   return (
     <Dialog
       visible={visible}
-      onHide={() => setVisible(false)}
+      onHide={() => {
+        setVisible(false);
+        setPasswords({
+          current: { password: "", error: false },
+          new: { password: "", error: false },
+          confirm: { password: "", error: false },
+        });
+      }}
       draggable={false}
       header="Change Password"
     >
@@ -33,57 +41,87 @@ export default function ChangePassword({
         className="flex flex-column gap-3"
         onSubmit={(e) => {
           e.preventDefault();
-          if (passwords.newPassword !== passwords.confirm) {
+          if (passwords.new.password !== passwords.confirm.password) {
             showMessage({
               severity: "error",
               summary: "Error",
               detail: "Passwords do not match",
             });
+            setPasswords({
+              ...passwords,
+              new: { ...passwords.new, error: true },
+              confirm: { ...passwords.confirm, error: true },
+            });
             return;
           }
-          if (passwords.newPassword === passwords.currentPassword) {
+          if (passwords.new.password === passwords.current.password) {
             showMessage({
               severity: "error",
               summary: "Error",
               detail: "New password cannot be the same as the current password",
             });
+            setPasswords({
+              ...passwords,
+              new: { ...passwords.new, error: true },
+              current: { ...passwords.current, error: true },
+              confirm: { ...passwords.current, error: true },
+            });
             return;
           }
-          new ApiService()
-            .patch(environment.updatePasswordUrl, {
-              currentPassword: passwords.currentPassword,
-              newPassword: passwords.newPassword,
-            })
-            .then(
-              (res) => {
-                if (res.status === 200) {
-                  setVisible(false);
-                  setPasswords({
-                    currentPassword: "",
-                    newPassword: "",
-                    confirm: "",
-                  });
-                  showMessage({
-                    severity: "success",
-                    summary: "Success",
-                    detail: "Password updated successfully",
-                  });
-                }
-              },
-              (err) => {
-                showMessage({
-                  severity: "error",
-                  summary: "Error",
-                  detail: err.response.data.message,
-                });
-              }
-            );
+          confirmPopup({
+            target: e.currentTarget,
+            message: "Are you sure you want to change your password?",
+            icon: "pi pi-exclamation-triangle",
+            acceptClassName: "p-button-warning",
+            rejectClassName: "p-button-outlined p-button-warning",
+            accept: () => {
+              new ApiService()
+                .patch(environment.updatePasswordUrl, {
+                  currentPassword: passwords.current.password,
+                  newPassword: passwords.new.password,
+                })
+                .then(
+                  (res) => {
+                    if (res.status === 200) {
+                      setVisible(false);
+                      setPasswords({
+                        current: { password: "", error: false },
+                        new: { password: "", error: false },
+                        confirm: { password: "", error: false },
+                      });
+                      showMessage({
+                        severity: "success",
+                        summary: "Success",
+                        detail: "Password updated successfully",
+                      });
+                    }
+                  },
+                  (err) => {
+                    showMessage({
+                      severity: "error",
+                      summary: "Error",
+                      detail: err.response.data.message,
+                    });
+                    if (
+                      err.response.data.message
+                        .toLocaleLowerCase()
+                        .includes("invalid credentials")
+                    ) {
+                      setPasswords({
+                        ...passwords,
+                        current: { ...passwords.current, error: true },
+                      });
+                    }
+                  }
+                );
+            },
+          });
         }}
         onReset={() =>
           setPasswords({
-            currentPassword: "",
-            newPassword: "",
-            confirm: "",
+            current: { password: "", error: false },
+            new: { password: "", error: false },
+            confirm: { password: "", error: false },
           })
         }
       >
@@ -94,11 +132,15 @@ export default function ChangePassword({
           <InputText
             placeholder="Current password"
             type="password"
-            value={passwords.currentPassword}
+            value={passwords.current.password}
             onChange={(e) =>
-              setPasswords({ ...passwords, currentPassword: e.target.value })
+              setPasswords({
+                ...passwords,
+                current: { password: e.target.value, error: false },
+              })
             }
             required
+            invalid={passwords.current.error}
           />
         </div>
         <div className="p-inputgroup flex-1">
@@ -108,11 +150,15 @@ export default function ChangePassword({
           <InputText
             placeholder="New password"
             type="password"
-            value={passwords.newPassword}
+            value={passwords.new.password}
             onChange={(e) =>
-              setPasswords({ ...passwords, newPassword: e.target.value })
+              setPasswords({
+                ...passwords,
+                new: { password: e.target.value, error: false },
+              })
             }
             required
+            invalid={passwords.new.error}
           />
         </div>
         <div className="p-inputgroup flex-1">
@@ -122,11 +168,15 @@ export default function ChangePassword({
           <InputText
             placeholder="Confirm password"
             type="password"
-            value={passwords.confirm}
+            value={passwords.confirm.password}
             onChange={(e) =>
-              setPasswords({ ...passwords, confirm: e.target.value })
+              setPasswords({
+                ...passwords,
+                confirm: { password: e.target.value, error: false },
+              })
             }
             required
+            invalid={passwords.confirm.error}
           />
         </div>
         <div className="flex justify-content-center gap-3 mt-2">

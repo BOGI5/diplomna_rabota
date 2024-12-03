@@ -5,8 +5,9 @@ import { Divider } from "primereact/divider";
 import { InputText } from "primereact/inputtext";
 import { FileUpload } from "primereact/fileupload";
 import { ToggleButton } from "primereact/togglebutton";
-import { useAuthState, UserDef } from "../../contexts/AuthContext";
+import { confirmPopup, ConfirmPopup } from "primereact/confirmpopup";
 import { useNotification } from "../../contexts/NotificationContext";
+import { useAuthState, UserDef } from "../../contexts/AuthContext";
 import ChangePassword from "../../components/ChangePassword";
 import ApiService from "../../services/api";
 import environment from "../../environment";
@@ -65,30 +66,39 @@ export default function Profile() {
                   }}
                 />
               )}
+              <ConfirmPopup />
               <ToggleButton
                 checked={edit}
                 onChange={(e) => {
                   if (edit) {
-                    apiService
-                      .patch(environment.updateSelf, { ...userData })
-                      .then(
-                        (res) => {
-                          setUserData(res.data);
-                          const temp = userData;
-                          delete temp.email;
-                          setUser(temp);
-                          setEdit(e.value);
-                        },
-                        (err) => {
-                          console.log(err);
-                          showMessage({
-                            severity: "error",
-                            summary: "Error",
-                            detail: err.response.data.message,
-                          });
-                          return;
-                        }
-                      );
+                    confirmPopup({
+                      target: e.originalEvent.target as HTMLElement,
+                      message: "Are you sure you want to save the changes?",
+                      icon: "pi pi-exclamation-triangle",
+                      defaultFocus: "accept",
+                      accept: () => {
+                        apiService
+                          .patch(environment.updateSelf, { ...userData })
+                          .then(
+                            (res) => {
+                              setUserData(res.data);
+                              const temp = userData;
+                              delete temp.email;
+                              setUser(temp);
+                              setEdit(e.value);
+                            },
+                            (err) => {
+                              console.log(err);
+                              showMessage({
+                                severity: "error",
+                                summary: "Error",
+                                detail: err.response.data.message,
+                              });
+                              return;
+                            }
+                          );
+                      },
+                    });
                   } else {
                     setEdit(e.value);
                   }
@@ -109,9 +119,18 @@ export default function Profile() {
             label="Delete account"
             icon="pi pi-trash"
             severity="danger"
-            onClick={() => {
-              apiService.delete(environment.deleteSelf).then(() => {
-                window.location.href = "/auth";
+            onClick={(e) => {
+              confirmPopup({
+                target: e.target as HTMLElement,
+                message: "Are you sure you want to delete your account?",
+                icon: "pi pi-exclamation-triangle",
+                acceptClassName: "p-button-danger",
+                defaultFocus: "reject",
+                accept: () => {
+                  apiService.delete(environment.deleteSelf).then(() => {
+                    window.location.href = "/auth";
+                  });
+                },
               });
             }}
           />

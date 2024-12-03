@@ -125,30 +125,33 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
             detail: errorMessage,
             sticky: true,
           });
-          handleSubmitError(err.response.data.statusCode, errorMessage);
+          handleSubmitError(
+            err.response.data.statusCode,
+            errorMessage.toLocaleLowerCase()
+          );
         }
       );
   };
 
   const handleSubmitError = (code: number, message: string) => {
     if (code === 400) {
-      if (message.toLocaleLowerCase().includes("email")) {
+      if (message.includes("email")) {
         setFormData({
           ...formData,
           email: { ...formData.email, error: true },
         });
-      } else if (message.toLocaleLowerCase().includes("password")) {
+      } else if (message.includes("password")) {
         setFormData({
           ...formData,
           password: { ...formData.password, error: true },
         });
-      } else if (message.toLocaleLowerCase().includes("invalid credentials")) {
+      } else if (message.includes("invalid credentials")) {
         setFormData({
           ...formData,
           email: { ...formData.email, error: true },
           password: { ...formData.password, error: true },
         });
-      } else if (message.toLocaleLowerCase().includes("user already exists")) {
+      } else if (message.includes("user already exists")) {
         setFormData({
           email: { ...formData.email, error: true },
           password: { ...formData.password, error: true },
