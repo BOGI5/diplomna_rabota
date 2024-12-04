@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateMemberDto } from "./dto/create-member.dto";
@@ -23,7 +23,18 @@ export class MembersService {
     return this.memberRepository.findOne({ where: { id } });
   }
 
+  findByProjectId(projectId: number) {
+    return this.memberRepository.find({ where: { projectId } });
+  }
+
+  findByUserId(userId: number) {
+    return this.memberRepository.find({ where: { userId } });
+  }
+
   update(id: number, updateMemberDto: UpdateMemberDto) {
+    if (Object.keys(updateMemberDto).length === 0) {
+      throw new BadRequestException("Empty update data");
+    }
     return this.memberRepository.update(id, updateMemberDto);
   }
 

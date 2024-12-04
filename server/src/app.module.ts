@@ -8,6 +8,10 @@ import { UsersModule } from "./users/users.module";
 import { User } from "./users/entities/user.entity";
 import { ProjectsModule } from './projects/projects.module';
 import { MembersModule } from './members/members.module';
+import { StagesModule } from './stages/stages.module';
+import { AssignmentsModule } from './assignments/assignments.module';
+import { TasksModule } from './tasks/tasks.module';
+import { StagesModule } from './stages/stages.module';
 
 @Module({
   imports: [
@@ -29,6 +33,9 @@ import { MembersModule } from './members/members.module';
     }),
     ProjectsModule,
     MembersModule,
+    StagesModule,
+    TasksModule,
+    AssignmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

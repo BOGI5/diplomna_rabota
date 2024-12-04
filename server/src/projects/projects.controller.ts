@@ -31,11 +31,23 @@ export class ProjectsController {
     return this.projectsService.findAll();
   }
 
+  // @UseGuards(AccessTokenGuard)
+  // @Get("me")
+  // findUserProjects(@Req() req) {
+  //   return this.projectsService.findUserProjects(req.user.id);
+  // }
+
   @UseGuards(AccessTokenGuard)
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.projectsService.findOne(+id);
   }
+
+  // @UseGuards(AccessTokenGuard)
+  // @Get(":id/members")
+  // findMembers(@Param("id") id: string) {
+  //   return this.projectsService.findMembers(+id);
+  // }
 
   @UseGuards(AccessTokenGuard)
   @Patch(":id")

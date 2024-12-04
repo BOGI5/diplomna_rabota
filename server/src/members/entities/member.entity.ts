@@ -1,8 +1,10 @@
 import { Project } from "src/projects/entities/project.entity";
 import { User } from "src/users/entities/user.entity";
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Unique } from "typeorm";
 
 @Entity()
+@Unique(["userId", "projectId"])
 export class Member {
   @PrimaryGeneratedColumn()
   id: number;
