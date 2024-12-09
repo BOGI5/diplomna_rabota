@@ -1,4 +1,5 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { StagesService } from "src/stages/stages.service";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -8,10 +9,15 @@ import { Repository } from "typeorm";
 @Injectable()
 export class TasksService {
   constructor(
-    @InjectRepository(Task) private taskRepository: Repository<Task>
+    @InjectRepository(Task) private taskRepository: Repository<Task>,
+    private stagesService: StagesService
   ) {}
 
-  create(createTaskDto: CreateTaskDto) {
+  async create(createTaskDto: CreateTaskDto) {
+    const stage = await this.stagesService.findOne(createTaskDto.stageId);
+    if (stage.projectId !== createTaskDto.projectId) {
+      throw new BadRequestException("Stage does not belong to this project");
+    }
     return this.taskRepository.save(createTaskDto);
   }
 

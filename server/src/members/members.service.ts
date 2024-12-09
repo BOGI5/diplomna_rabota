@@ -12,7 +12,15 @@ export class MembersService {
   ) {}
 
   create(createMemberDto: CreateMemberDto) {
-    return this.memberRepository.save(createMemberDto);
+    return this.memberRepository.save(createMemberDto).catch((error) => {
+      // handle only unique constraint error
+      if (error.code === "23505") {
+        throw new BadRequestException(
+          "User is already a member of this project"
+        );
+      }
+      throw error;
+    });
   }
 
   findAll() {
