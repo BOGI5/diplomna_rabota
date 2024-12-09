@@ -27,6 +27,9 @@ export default function Header() {
         {
           label: "Projects",
           icon: "pi pi-folder",
+          command: () => {
+            window.location.href = `${environment.clientUrl}${environment.clientProjectsUrl}`;
+          },
         },
         {
           label: "Tasks",
