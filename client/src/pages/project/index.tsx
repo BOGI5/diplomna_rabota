@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { TabView, TabPanel } from "primereact/tabview";
 import ProjectSettings from "../../components/ProjectSettings";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ApiService from "../../services/api";
 import ProjectMembers from "../../components/ProjectMembers";
 import ProjectTasks from "../../components/ProjectTasks";
@@ -10,9 +10,10 @@ import ProjectOverview from "../../components/ProjectOverview";
 export default function Project() {
   const apiService = new ApiService();
   const { id } = useParams<{ id: string }>();
+  const [members, setMembers] = useState([]);
   useEffect(() => {
     apiService.get(`/projects/${id}`).then((res) => {
-      console.log(res.data);
+      setMembers(res.data.members);
     });
   }, [id]);
   return (
@@ -29,7 +30,7 @@ export default function Project() {
           <ProjectTasks />
         </TabPanel>
         <TabPanel header="Members">
-          <ProjectMembers />
+          <ProjectMembers members={members} />
         </TabPanel>
         <TabPanel header="Settings">
           <ProjectSettings />

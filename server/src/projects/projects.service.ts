@@ -1,8 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { /* BadRequestException,*/ Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateProjectDto } from "./dto/create-project.dto";
-import { UpdateProjectDto } from "./dto/update-project.dto";
+// import { UpdateProjectDto } from "./dto/update-project.dto";
 import { MembersService } from "src/members/members.service";
 import { StagesService } from "src/stages/stages.service";
 import { TasksService } from "src/tasks/tasks.service";
@@ -107,12 +107,11 @@ export class ProjectsService {
   //   return this.projectRepository.update(id, updateProjectDto);
   // }
 
-  remove(id: number) {
-    this.membersService.findByProjectId(id).then((members) => {
-      for (let member of members) {
-        this.membersService.remove(member.id);
-      }
-    });
+  async remove(id: number) {
+    const members = await this.membersService.findByProjectId(id);
+    for (const member of members) {
+      await this.membersService.remove(member.id);
+    }
     return this.projectRepository.delete(id);
   }
 }

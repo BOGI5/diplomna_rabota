@@ -4,16 +4,21 @@ import { Repository } from "typeorm";
 import { CreateMemberDto } from "./dto/create-member.dto";
 import { UpdateMemberDto } from "./dto/update-member.dto";
 import { Member } from "./entities/member.entity";
+import { AssignmentsService } from "src/assignments/assignments.service";
+import { UsersService } from "src/users/users.service";
+import { plainToInstance } from "class-transformer";
+import { User } from "src/users/entities/user.entity";
 
 @Injectable()
 export class MembersService {
   constructor(
-    @InjectRepository(Member) private memberRepository: Repository<Member>
+    @InjectRepository(Member) private memberRepository: Repository<Member>,
+    private assignmentsService: AssignmentsService,
+    private usersService: UsersService
   ) {}
 
-  create(createMemberDto: CreateMemberDto) {
+  async create(createMemberDto: CreateMemberDto) {
     return this.memberRepository.save(createMemberDto).catch((error) => {
-      // handle only unique constraint error
       if (error.code === "23505") {
         throw new BadRequestException(
           "User is already a member of this project"
@@ -23,20 +28,79 @@ export class MembersService {
     });
   }
 
-  findAll() {
-    return this.memberRepository.find();
+  async findAll() {
+    const members = await this.memberRepository.find();
+    const membersWithDetails = await Promise.all(
+      members.map(async (member) => {
+        const user = plainToInstance(
+          User,
+          await this.usersService.findOne(member.userId)
+        );
+        const assignments = await this.assignmentsService.findByMemberId(
+          member.id
+        );
+        return {
+          ...member,
+          user,
+          assignments,
+        };
+      })
+    );
+    return membersWithDetails;
   }
 
-  findOne(id: number) {
-    return this.memberRepository.findOne({ where: { id } });
+  async findOne(id: number) {
+    const member = await this.memberRepository.findOne({ where: { id } });
+    return {
+      ...member,
+      user: plainToInstance(
+        User,
+        await this.usersService.findOne(member.userId)
+      ),
+      assignments: await this.assignmentsService.findByMemberId(member.id),
+    };
   }
 
-  findByProjectId(projectId: number) {
-    return this.memberRepository.find({ where: { projectId } });
+  async findByProjectId(projectId: number) {
+    const members = await this.memberRepository.find({ where: { projectId } });
+    const membersWithDetails = await Promise.all(
+      members.map(async (member) => {
+        const user = plainToInstance(
+          User,
+          await this.usersService.findOne(member.userId)
+        );
+        const assignments = await this.assignmentsService.findByMemberId(
+          member.id
+        );
+        return {
+          ...member,
+          user,
+          assignments,
+        };
+      })
+    );
+    return membersWithDetails;
   }
 
-  findByUserId(userId: number) {
-    return this.memberRepository.find({ where: { userId } });
+  async findByUserId(userId: number) {
+    const members = await this.memberRepository.find({ where: { userId } });
+    const membersWithDetails = await Promise.all(
+      members.map(async (member) => {
+        const user = plainToInstance(
+          User,
+          await this.usersService.findOne(member.userId)
+        );
+        const assignments = await this.assignmentsService.findByMemberId(
+          member.id
+        );
+        return {
+          ...member,
+          user,
+          assignments,
+        };
+      })
+    );
+    return membersWithDetails;
   }
 
   update(id: number, updateMemberDto: UpdateMemberDto) {
