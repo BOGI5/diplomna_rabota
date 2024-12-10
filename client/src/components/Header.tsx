@@ -1,13 +1,13 @@
 import { Avatar } from "primereact/avatar";
 import { Menubar } from "primereact/menubar";
 import { SplitButton } from "primereact/splitbutton";
-import { useAuthState } from "../contexts/AuthContext";
+import { useAuthContext } from "../contexts/AuthContext";
 import environment from "../environment";
 import { useEffect, useState } from "react";
 
 export default function Header() {
-  const { user } = useAuthState();
-  const { logoutUser } = useAuthState();
+  const { user } = useAuthContext();
+  const { logoutUser } = useAuthContext();
   const [username, setUsername] = useState<string>(
     `${user?.firstName} ${user?.lastName}`
   );
@@ -45,12 +45,11 @@ export default function Header() {
         },
       ]}
       end={
-        <div style={{ display: "flex", justifyContent: "content" }}>
+        <div style={{ display: "flex" }}>
           <a
             href={`${environment.clientUrl}${environment.clientProfileUrl}`}
             style={{
               display: "flex",
-              justifyContent: "content",
               textDecoration: "none",
             }}
           >

@@ -5,7 +5,7 @@ import { confirmPopup } from "primereact/confirmpopup";
 import { useState } from "react";
 import ApiService from "../services/api";
 import environment from "../environment";
-import { useNotification } from "../contexts/NotificationContext";
+import { useNotificationContext } from "../contexts/NotificationContext";
 
 interface ChangePasswordProps {
   visible: boolean;
@@ -21,7 +21,7 @@ export default function ChangePassword({
     new: { password: "", error: false },
     confirm: { password: "", error: false },
   });
-  const { showMessage } = useNotification();
+  const { showMessage } = useNotificationContext();
 
   return (
     <Dialog

@@ -6,26 +6,27 @@ import { InputText } from "primereact/inputtext";
 import { FileUpload } from "primereact/fileupload";
 import { ToggleButton } from "primereact/togglebutton";
 import { confirmPopup, ConfirmPopup } from "primereact/confirmpopup";
-import { useNotification } from "../../contexts/NotificationContext";
-import { useAuthState, UserDef } from "../../contexts/AuthContext";
+import { useNotificationContext } from "../../contexts/NotificationContext";
+import { useAuthContext } from "../../contexts/AuthContext";
 import ChangePassword from "../../components/ChangePassword";
 import ApiService from "../../services/api";
 import environment from "../../environment";
 import { useEffect, useState } from "react";
+import User from "../../interfaces/user.interface";
 
 export default function Profile() {
   const apiService = new ApiService();
   const [changePassword, setChangePassword] = useState(false);
-  const { setUser, deleteUser } = useAuthState();
-  const { showMessage } = useNotification();
+  const { setUser, deleteUser } = useAuthContext();
+  const { showMessage } = useNotificationContext();
   const [edit, setEdit] = useState(false);
   const [smallScreen, setSmallScreen] = useState(window.innerWidth < 960);
-  const [userData, setUserData] = useState<UserDef>({
+  const [userData, setUserData] = useState<User>({
     firstName: "",
     lastName: "",
     email: "",
     picture: "",
-    id: "",
+    id: 0,
   });
   useEffect(() => {
     apiService.get(environment.getSelf).then((res) => {
@@ -224,7 +225,7 @@ export default function Profile() {
               severity="danger"
               disabled={!edit || userData.picture === null}
               onClick={() => {
-                setUserData({ ...userData, picture: null });
+                setUserData({ ...userData, picture: undefined });
               }}
             />
             <FileUpload

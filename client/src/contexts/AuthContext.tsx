@@ -1,18 +1,11 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import User from "../interfaces/user.interface";
 import ApiService from "../services/api";
 import environment from "../environment";
 
-export interface UserDef {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  picture: string | null;
-}
-
 export interface AuthStateDef {
-  user: UserDef | null;
-  setUser: (data: UserDef) => void;
+  user: User | null;
+  setUser: (data: User) => void;
   logoutUser: () => void;
   deleteUser: () => void;
 }
@@ -20,14 +13,14 @@ export interface AuthStateDef {
 const AuthContext = createContext<AuthStateDef | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUserState] = useState<UserDef | null>(() => {
+  const [user, setUserState] = useState<User | null>(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
   const apiService = new ApiService();
 
-  const setUser = (user: UserDef) => {
+  const setUser = (user: User) => {
     setUserState(user);
     localStorage.setItem("user", JSON.stringify(user));
   };
@@ -51,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuthState = (): AuthStateDef => {
+export const useAuthContext = (): AuthStateDef => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuthState must be used within an AuthProvider");

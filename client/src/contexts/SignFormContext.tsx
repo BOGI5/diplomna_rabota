@@ -8,7 +8,7 @@ import {
 } from "react";
 import environment from "../environment";
 import { ToastMessage } from "primereact/toast";
-import { useAuthState } from "./AuthContext";
+import { useAuthContext } from "./AuthContext";
 
 export interface SignStateDef {
   visible: boolean;
@@ -57,7 +57,7 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
     lastName: { value: "", error: false },
   });
 
-  const { setUser } = useAuthState();
+  const { setUser } = useAuthContext();
 
   onresize = () => {
     if (window.innerWidth < 600) {

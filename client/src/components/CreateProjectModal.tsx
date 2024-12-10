@@ -2,7 +2,7 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { useState } from "react";
-import { useNotification } from "../contexts/NotificationContext";
+import { useNotificationContext } from "../contexts/NotificationContext";
 import environment from "../environment";
 import ApiService from "../services/api";
 
@@ -13,7 +13,7 @@ interface CreateProjectModalProps {
 
 export default function CreateProjectModal(props: CreateProjectModalProps) {
   const apiService = new ApiService();
-  const { showMessage } = useNotification();
+  const { showMessage } = useNotificationContext();
   const [projectName, setProjectName] = useState<string>("");
   return (
     <Dialog
