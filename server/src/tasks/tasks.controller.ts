@@ -6,24 +6,29 @@ import {
   Param,
   Delete,
   ValidationPipe,
+  UseGuards,
 } from "@nestjs/common";
 import { TasksService } from "./tasks.service";
 import { UpdateTaskDto } from "./dto/update-task.dto";
+import { AccessTokenGuard } from "src/auth/guards/accessToken.guard";
 
 @Controller("tasks")
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
+  @UseGuards(AccessTokenGuard)
   @Get()
   findAll() {
     return this.tasksService.findAll();
   }
 
+  @UseGuards(AccessTokenGuard)
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.tasksService.findOne(+id);
   }
 
+  @UseGuards(AccessTokenGuard)
   @Patch(":id")
   update(
     @Param("id") id: string,
@@ -32,6 +37,7 @@ export class TasksController {
     return this.tasksService.update(+id, updateTaskDto);
   }
 
+  @UseGuards(AccessTokenGuard)
   @Delete(":id")
   remove(@Param("id") id: string) {
     return this.tasksService.remove(+id);
