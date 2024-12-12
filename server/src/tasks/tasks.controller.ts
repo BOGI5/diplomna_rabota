@@ -7,6 +7,7 @@ import {
   Delete,
   ValidationPipe,
   UseGuards,
+  Req,
 } from "@nestjs/common";
 import { TasksService } from "./tasks.service";
 import { UpdateTaskDto } from "./dto/update-task.dto";
@@ -20,6 +21,12 @@ export class TasksController {
   @Get()
   findAll() {
     return this.tasksService.findAll();
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Get("me")
+  findUserTasks(@Req() req) {
+    return this.tasksService.findUserTasks(req.user.id);
   }
 
   @UseGuards(AccessTokenGuard)
