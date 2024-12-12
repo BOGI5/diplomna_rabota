@@ -1,16 +1,24 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from "@nestjs/common";
 import { StagesService } from "src/stages/stages.service";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Task } from "./entities/task.entity";
 import { Repository } from "typeorm";
+import { AssignmentsService } from "src/assignments/assignments.service";
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(Task) private taskRepository: Repository<Task>,
-    private stagesService: StagesService
+    @Inject(forwardRef(() => StagesService))
+    private stagesService: StagesService,
+    private assignmentsService: AssignmentsService
   ) {}
 
   async create(createTaskDto: CreateTaskDto) {
@@ -38,10 +46,18 @@ export class TasksService {
   }
 
   update(id: number, updateTaskDto: UpdateTaskDto) {
+    delete updateTaskDto.projectId;
+    if (Object.keys(updateTaskDto).length === 0) {
+      throw new BadRequestException("Empty update data");
+    }
     return this.taskRepository.update(id, updateTaskDto);
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    const assignments = await this.assignmentsService.findByTaskId(id);
+    for (const assignment of assignments) {
+      await this.assignmentsService.remove(assignment.id);
+    }
     return this.taskRepository.delete(id);
   }
 }

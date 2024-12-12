@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateMemberDto } from "./dto/create-member.dto";
@@ -13,8 +18,8 @@ import { User } from "src/users/entities/user.entity";
 export class MembersService {
   constructor(
     @InjectRepository(Member) private memberRepository: Repository<Member>,
-    private assignmentsService: AssignmentsService,
-    private usersService: UsersService
+    @Inject(forwardRef(() => UsersService)) private usersService: UsersService,
+    private assignmentsService: AssignmentsService
   ) {}
 
   async create(createMemberDto: CreateMemberDto) {
@@ -104,13 +109,19 @@ export class MembersService {
   }
 
   update(id: number, updateMemberDto: UpdateMemberDto) {
+    delete updateMemberDto.projectId;
+    delete updateMemberDto.userId;
     if (Object.keys(updateMemberDto).length === 0) {
       throw new BadRequestException("Empty update data");
     }
     return this.memberRepository.update(id, updateMemberDto);
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    const assignments = await this.assignmentsService.findByMemberId(id);
+    for (const assignment of assignments) {
+      await this.assignmentsService.remove(assignment.id);
+    }
     return this.memberRepository.delete(id);
   }
 }

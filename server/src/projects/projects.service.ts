@@ -109,6 +109,14 @@ export class ProjectsService {
 
   async remove(id: number) {
     const members = await this.membersService.findByProjectId(id);
+    const stages = await this.stagesService.findByProjectId(id);
+    const tasks = await this.tasksService.findByProjectId(id);
+    for (const task of tasks) {
+      await this.tasksService.remove(task.id);
+    }
+    for (const stage of stages) {
+      await this.stagesService.remove(stage.id);
+    }
     for (const member of members) {
       await this.membersService.remove(member.id);
     }
