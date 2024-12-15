@@ -34,8 +34,8 @@ export default function Home() {
 
   return (
     <>
-      <div className="mt-3 flex flex-column gap-3">
-        <div className="flex flex-row justify-content-between gap-3">
+      <div className="mt-2 flex flex-column gap-2">
+        <div className="flex flex-row justify-content-between gap-2">
           <Card
             title={
               <div className="flex flex-row justify-content-between align-content-center">

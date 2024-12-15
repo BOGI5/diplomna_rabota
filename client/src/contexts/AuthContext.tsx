@@ -3,14 +3,14 @@ import User from "../interfaces/user.interface";
 import ApiService from "../services/api";
 import environment from "../environment";
 
-export interface AuthStateDef {
+export interface AuthContextType {
   user: User | null;
   setUser: (data: User) => void;
   logoutUser: () => void;
   deleteUser: () => void;
 }
 
-const AuthContext = createContext<AuthStateDef | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUserState] = useState<User | null>(() => {
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuthContext = (): AuthStateDef => {
+export const useAuthContext = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuthState must be used within an AuthProvider");
