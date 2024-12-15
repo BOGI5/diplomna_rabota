@@ -1,42 +1,28 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Avatar } from "primereact/avatar";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { MultiSelect } from "primereact/multiselect";
 import { useProjectContext } from "../contexts/ProjectContext";
 import { useNotificationContext } from "../contexts/NotificationContext";
-import Member from "../interfaces/member.interface";
 import User from "../interfaces/user.interface";
 import ApiService from "../services/api";
-import environment from "../environment";
 
 export default function AddMembersModal({
+  availableUsers,
   visible,
   setVisible,
 }: {
+  availableUsers: User[];
   visible: boolean;
   setVisible: (visible: boolean) => void;
 }) {
+  const apiService = new ApiService();
   const { project, updateProjectData } = useProjectContext();
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
-  const [users, setUsers] = useState([]);
-  const apiService = new ApiService();
   const { showMessage } = useNotificationContext();
   const { id } = useParams<{ id: string }>();
-
-  useEffect(() => {
-    apiService.get(environment.getAll).then((response) => {
-      setUsers(
-        response.data.filter(
-          (user: User) =>
-            !project?.members.some(
-              (member: Member) => member.user.id === user.id
-            )
-        )
-      );
-    });
-  }, []);
 
   const userTemplate = (user: User) => {
     return (
@@ -56,13 +42,16 @@ export default function AddMembersModal({
     <>
       <Dialog
         visible={visible}
-        onHide={() => setVisible(false)}
+        onHide={() => {
+          setSelectedUsers([]);
+          setVisible(false);
+        }}
         draggable={false}
         header="Add members"
       >
         <form
           className="mt-1 flex flex-column justify-content-center gap-3"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             if (selectedUsers.length === 0) {
               showMessage({
@@ -71,23 +60,27 @@ export default function AddMembersModal({
                 detail: "Please select at least one user",
               });
             }
-            for (const selectedUser of selectedUsers) {
-              apiService
-                .post(`/projects/${id}/members`, {
-                  userId: selectedUser.id,
-                  memberType: "User",
-                })
-                .catch((error) => {
-                  showMessage({
-                    severity: "error",
-                    summary: "Error",
-                    detail: error.response.data.message,
-                  });
-                });
-            }
-            apiService.get(`projects/${project?.id}`).then((res) => {
-              updateProjectData(res.data);
-            });
+            await Promise.all(
+              selectedUsers.map((selectedUser) =>
+                apiService
+                  .post(`/projects/${id}/members`, {
+                    userId: selectedUser.id,
+                    memberType: "User",
+                  })
+                  .catch((error) => {
+                    showMessage({
+                      severity: "error",
+                      summary: "Error",
+                      detail: error.response.data.message,
+                    });
+                  })
+              )
+            );
+            setSelectedUsers([]);
+            const projectData = await apiService.get(
+              `/projects/${project?.id}`
+            );
+            updateProjectData(projectData.data);
             setVisible(false);
           }}
         >
@@ -95,8 +88,8 @@ export default function AddMembersModal({
             filter
             placeholder="Select users"
             display="chip"
-            optionLabel="firstName"
-            options={users}
+            optionLabel="name"
+            options={availableUsers}
             value={selectedUsers}
             onChange={(e) => setSelectedUsers(e.value)}
             itemTemplate={userTemplate}
@@ -107,7 +100,10 @@ export default function AddMembersModal({
               icon="pi pi-times"
               severity="danger"
               type="reset"
-              onClick={() => setVisible(false)}
+              onClick={() => {
+                setSelectedUsers([]);
+                setVisible(false);
+              }}
               text
               raised
             />
