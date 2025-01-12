@@ -11,6 +11,7 @@ import { MembersModule } from "./members/members.module";
 import { StagesModule } from "./stages/stages.module";
 import { AssignmentsModule } from "./assignments/assignments.module";
 import { TasksModule } from "./tasks/tasks.module";
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { TasksModule } from "./tasks/tasks.module";
     StagesModule,
     TasksModule,
     AssignmentsModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

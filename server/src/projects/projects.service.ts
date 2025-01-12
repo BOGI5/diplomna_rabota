@@ -1,11 +1,12 @@
-import { /* BadRequestException,*/ Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateProjectDto } from "./dto/create-project.dto";
-// import { UpdateProjectDto } from "./dto/update-project.dto";
+import { UpdateProjectDto } from "./dto/update-project.dto";
 import { MembersService } from "src/members/members.service";
 import { StagesService } from "src/stages/stages.service";
 import { TasksService } from "src/tasks/tasks.service";
+import { UsersService } from "src/users/users.service";
 import { Project } from "./entities/project.entity";
 import { CreateMemberDto } from "src/members/dto/create-member.dto";
 import { CreateStageDto } from "src/stages/dto/create-stage.dto";
@@ -17,20 +18,23 @@ export class ProjectsService {
     @InjectRepository(Project) private projectRepository: Repository<Project>,
     private membersService: MembersService,
     private stagesService: StagesService,
-    private tasksService: TasksService
+    private tasksService: TasksService,
+    private usersService: UsersService
   ) {}
 
   public async create(createProjectDto: CreateProjectDto, ownerId: number) {
-    const project = await this.projectRepository.save(createProjectDto);
-    this.membersService.create({
-      userId: ownerId,
-      projectId: project.id,
-      memberType: "Admin",
+    const project = await this.projectRepository.save({
+      ...createProjectDto,
+      ownerId,
     });
     return project;
   }
 
   public async addMember(createMemberDto: CreateMemberDto) {
+    const { ownerId } = await this.findOne(createMemberDto.projectId);
+    if (createMemberDto.userId === ownerId) {
+      throw new BadRequestException("Owner can't be added as a member");
+    }
     return this.membersService.create(createMemberDto);
   }
 
@@ -51,6 +55,7 @@ export class ProjectsService {
           members: await this.findMembers(project.id),
           stages: await this.findStages(project.id),
           tasks: await this.findTasks(project.id),
+          owner: await this.usersService.findOne(project.ownerId),
         };
       })
     );
@@ -64,15 +69,21 @@ export class ProjectsService {
       members: await this.findMembers(id),
       stages: await this.findStages(id),
       tasks: await this.findTasks(id),
+      owner: await this.usersService.findOne(project.ownerId),
     };
   }
 
-  async findUserProjects(userId: number) {
-    const members = await this.membersService.findByUserId(userId);
-    const projects = await Promise.all(
-      members.map(async (memberPromise) => {
-        const member = await memberPromise;
-        return await this.findOne(member.projectId);
+  async findByOwner(ownerId: number) {
+    let projects = await this.projectRepository.find({ where: { ownerId } });
+    projects = await Promise.all(
+      projects.map(async (project) => {
+        return {
+          ...project,
+          members: await this.findMembers(project.id),
+          stages: await this.findStages(project.id),
+          tasks: await this.findTasks(project.id),
+          owner: await this.usersService.findOne(project.ownerId),
+        };
       })
     );
     return projects;
@@ -82,30 +93,20 @@ export class ProjectsService {
     return this.membersService.findByProjectId(id);
   }
 
-  findStages(id: number) {
-    return this.stagesService.findByProjectId(id);
+  async findStages(id: number) {
+    return await this.stagesService.findByProjectId(id);
   }
 
-  findTasks(id: number) {
-    return this.tasksService.findByProjectId(id);
+  async findTasks(id: number) {
+    return await this.tasksService.findByProjectId(id);
   }
 
-  // update(id: number, updateProjectDto: UpdateProjectDto) {
-  //   if (Object.keys(updateProjectDto).length === 0) {
-  //     throw new BadRequestException("Empty update data");
-  //   }
-  //   for (let member of updateProjectDto.members) {
-  //     this.membersService.create({
-  //       userId: member.userId,
-  //       projectId: id,
-  //       memberType: member.memberType,
-  //     });
-  //   }
-  //   if (updateProjectDto.members) {
-  //     delete updateProjectDto.members;
-  //   }
-  //   return this.projectRepository.update(id, updateProjectDto);
-  // }
+  update(id: number, updateProjectDto: UpdateProjectDto) {
+    if (Object.keys(updateProjectDto).length === 0) {
+      throw new BadRequestException("Empty update data");
+    }
+    return this.projectRepository.update(id, updateProjectDto);
+  }
 
   async remove(id: number) {
     const members = await this.membersService.findByProjectId(id);
