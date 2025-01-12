@@ -16,10 +16,10 @@ import { plainToInstance } from "class-transformer";
 import { User } from "./entities/user.entity";
 
 @Controller("users")
+@UseGuards(AccessTokenGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(AccessTokenGuard)
   @Get()
   async findAll() {
     return this.usersService
@@ -27,28 +27,24 @@ export class UsersController {
       .then((users) => users.map((user) => plainToInstance(User, user)));
   }
 
-  @UseGuards(AccessTokenGuard)
   @Get("me")
   async findMe(@Req() req) {
     const user = await this.usersService.findOne(req.user.id);
     return plainToInstance(User, user);
   }
 
-  @UseGuards(AccessTokenGuard)
   @Get(":id")
   async findOne(@Param("id") id: string) {
     const user = await this.usersService.findOne(+id);
     return plainToInstance(User, user);
   }
 
-  @UseGuards(AccessTokenGuard)
   @Patch("me")
   async update(@Req() req, @Body(ValidationPipe) updateUserDto: UpdateUserDto) {
     const user = await this.usersService.update(req.user.id, updateUserDto);
     return plainToInstance(User, user);
   }
 
-  @UseGuards(AccessTokenGuard)
   @Delete("me")
   remove(@Req() req) {
     return this.usersService.remove(req.user.id);
