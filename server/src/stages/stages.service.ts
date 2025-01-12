@@ -22,16 +22,35 @@ export class StagesService {
     return this.stageRepository.save(createStageDto);
   }
 
-  findAll() {
-    return this.stageRepository.find();
+  async findAll() {
+    const stages = await this.stageRepository.find();
+    return await Promise.all(
+      stages.map(async (stage) => {
+        return {
+          ...stage,
+          tasks: await this.tasksService.findByStageId(stage.id),
+        };
+      })
+    );
   }
 
-  findOne(id: number) {
-    return this.stageRepository.findOne({ where: { id } });
+  async findOne(id: number) {
+    return {
+      ...(await this.stageRepository.findOne({ where: { id } })),
+      tasks: await this.tasksService.findByStageId(id),
+    };
   }
 
-  findByProjectId(projectId: number) {
-    return this.stageRepository.find({ where: { projectId } });
+  async findByProjectId(projectId: number) {
+    const stages = await this.stageRepository.find({ where: { projectId } });
+    return await Promise.all(
+      stages.map(async (stage) => {
+        return {
+          ...stage,
+          tasks: await this.tasksService.findByStageId(stage.id),
+        };
+      })
+    );
   }
 
   update(id: number, updateStageDto: UpdateStageDto) {

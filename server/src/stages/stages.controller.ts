@@ -13,22 +13,20 @@ import { UpdateStageDto } from "./dto/update-stage.dto";
 import { AccessTokenGuard } from "src/auth/guards/accessToken.guard";
 
 @Controller("stages")
+@UseGuards(AccessTokenGuard)
 export class StagesController {
   constructor(private readonly stagesService: StagesService) {}
 
-  @UseGuards(AccessTokenGuard)
   @Get()
-  findAll() {
-    return this.stagesService.findAll();
+  async findAll() {
+    return await this.stagesService.findAll();
   }
 
-  @UseGuards(AccessTokenGuard)
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.stagesService.findOne(+id);
+  async findOne(@Param("id") id: string) {
+    return await this.stagesService.findOne(+id);
   }
 
-  @UseGuards(AccessTokenGuard)
   @Patch(":id")
   update(
     @Param("id") id: string,
@@ -37,7 +35,6 @@ export class StagesController {
     return this.stagesService.update(+id, updateStageDto);
   }
 
-  @UseGuards(AccessTokenGuard)
   @Delete(":id")
   remove(@Param("id") id: string) {
     return this.stagesService.remove(+id);
