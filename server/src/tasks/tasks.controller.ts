@@ -14,28 +14,20 @@ import { UpdateTaskDto } from "./dto/update-task.dto";
 import { AccessTokenGuard } from "src/auth/guards/accessToken.guard";
 
 @Controller("tasks")
+@UseGuards(AccessTokenGuard)
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
-  @UseGuards(AccessTokenGuard)
   @Get()
-  findAll() {
-    return this.tasksService.findAll();
+  async findAll() {
+    return await this.tasksService.findAll();
   }
 
-  @UseGuards(AccessTokenGuard)
-  @Get("me")
-  findUserTasks(@Req() req) {
-    return this.tasksService.findUserTasks(req.user.id);
-  }
-
-  @UseGuards(AccessTokenGuard)
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.tasksService.findOne(+id);
+  async findOne(@Param("id") id: string) {
+    return await this.tasksService.findOne(+id);
   }
 
-  @UseGuards(AccessTokenGuard)
   @Patch(":id")
   update(
     @Param("id") id: string,
@@ -44,7 +36,6 @@ export class TasksController {
     return this.tasksService.update(+id, updateTaskDto);
   }
 
-  @UseGuards(AccessTokenGuard)
   @Delete(":id")
   remove(@Param("id") id: string) {
     return this.tasksService.remove(+id);

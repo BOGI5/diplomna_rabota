@@ -31,33 +31,60 @@ export class TasksService {
     return this.taskRepository.save(createTaskDto);
   }
 
-  findAll() {
-    return this.taskRepository.find();
-  }
-
-  findOne(id: number) {
-    return this.taskRepository.findOne({ where: { id } });
-  }
-
-  findByProjectId(projectId: number) {
-    return this.taskRepository.find({ where: { projectId } });
-  }
-
-  findByStageId(stageId: number) {
-    return this.taskRepository.find({ where: { stageId } });
-  }
-
-  async findUserTasks(userId: number) {
-    const members = await this.membersService.findByUserId(userId);
-    const tasks = [];
-    await Promise.all(
-      members.map(async (member) => {
-        member.assignments.map(async (assignment) => {
-          tasks.push(await this.findOne(assignment.taskId));
-        });
+  async findAll() {
+    const tasks = await this.taskRepository.find();
+    return await Promise.all(
+      tasks.map(async (task) => {
+        const assignments = await this.assignmentsService.findByTaskId(task.id);
+        const members = await Promise.all(
+          assignments.map(async (assignment) => {
+            return await this.membersService.findOne(assignment.memberId);
+          })
+        );
+        return { ...task, members };
       })
     );
-    return tasks;
+  }
+
+  async findOne(id: number) {
+    const task = await this.taskRepository.findOne({ where: { id } });
+    const assignments = await this.assignmentsService.findByTaskId(task.id);
+    const members = await Promise.all(
+      assignments.map(async (assignment) => {
+        return await this.membersService.findOne(assignment.memberId);
+      })
+    );
+    return { ...task, members };
+  }
+
+  async findByProjectId(projectId: number) {
+    const tasks = await this.taskRepository.find({ where: { projectId } });
+    return await Promise.all(
+      tasks.map(async (task) => {
+        const assignments = await this.assignmentsService.findByTaskId(task.id);
+        const members = await Promise.all(
+          assignments.map(async (assignment) => {
+            return await this.membersService.findOne(assignment.memberId);
+          })
+        );
+        return { ...task, members };
+      })
+    );
+  }
+
+  async findByStageId(stageId: number) {
+    const tasks = await this.taskRepository.find({ where: { stageId } });
+    return await Promise.all(
+      tasks.map(async (task) => {
+        const assignments = await this.assignmentsService.findByTaskId(task.id);
+        const members = await Promise.all(
+          assignments.map(async (assignment) => {
+            return await this.membersService.findOne(assignment.memberId);
+          })
+        );
+        return { ...task, members };
+      })
+    );
   }
 
   update(id: number, updateTaskDto: UpdateTaskDto) {
