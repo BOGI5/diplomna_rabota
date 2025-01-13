@@ -9,9 +9,9 @@ import { Task } from "./entities/task.entity";
 
 @Module({
   imports: [
-    MembersModule,
     AssignmentsModule,
     forwardRef(() => StagesModule),
+    forwardRef(() => MembersModule),
     TypeOrmModule.forFeature([Task]),
   ],
   controllers: [TasksController],

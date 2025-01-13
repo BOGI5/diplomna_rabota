@@ -19,6 +19,7 @@ export class TasksService {
     @InjectRepository(Task) private taskRepository: Repository<Task>,
     @Inject(forwardRef(() => StagesService))
     private stagesService: StagesService,
+    @Inject(forwardRef(() => MembersService))
     private membersService: MembersService,
     private assignmentsService: AssignmentsService
   ) {}

@@ -13,16 +13,18 @@ import { AssignmentsService } from "src/assignments/assignments.service";
 import { UsersService } from "src/users/users.service";
 import { plainToInstance } from "class-transformer";
 import { User } from "src/users/entities/user.entity";
+import { TasksService } from "src/tasks/tasks.service";
 
 @Injectable()
 export class MembersService {
   constructor(
     @InjectRepository(Member) private memberRepository: Repository<Member>,
     @Inject(forwardRef(() => UsersService)) private usersService: UsersService,
+    @Inject(forwardRef(() => TasksService)) private tasksService: TasksService,
     private assignmentsService: AssignmentsService
   ) {}
 
-  async create(createMemberDto: CreateMemberDto) {
+  public async create(createMemberDto: CreateMemberDto) {
     return this.memberRepository.save(createMemberDto).catch((error) => {
       if (error.code === "23505") {
         throw new BadRequestException(
@@ -33,82 +35,39 @@ export class MembersService {
     });
   }
 
-  async findAll() {
+  public async findAll() {
     const members = await this.memberRepository.find();
-    const membersWithDetails = await Promise.all(
+    return await Promise.all(
       members.map(async (member) => {
-        const user = plainToInstance(
-          User,
-          await this.usersService.findOne(member.userId)
-        );
-        const assignments = await this.assignmentsService.findByMemberId(
-          member.id
-        );
-        return {
-          ...member,
-          user,
-          assignments,
-        };
+        return await this.formatMember(member);
       })
     );
-    return membersWithDetails;
   }
 
-  async findOne(id: number) {
+  public async findOne(id: number) {
     const member = await this.memberRepository.findOne({ where: { id } });
-    return {
-      ...member,
-      user: plainToInstance(
-        User,
-        await this.usersService.findOne(member.userId)
-      ),
-      assignments: await this.assignmentsService.findByMemberId(member.id),
-    };
+    return await this.formatMember(member);
   }
 
-  async findByProjectId(projectId: number) {
+  public async findByProjectId(projectId: number) {
     const members = await this.memberRepository.find({ where: { projectId } });
-    const membersWithDetails = await Promise.all(
+    return await Promise.all(
       members.map(async (member) => {
-        const user = plainToInstance(
-          User,
-          await this.usersService.findOne(member.userId)
-        );
-        const assignments = await this.assignmentsService.findByMemberId(
-          member.id
-        );
-        return {
-          ...member,
-          user,
-          assignments,
-        };
+        return await this.formatMember(member);
       })
     );
-    return membersWithDetails;
   }
 
-  async findByUserId(userId: number) {
+  public async findByUserId(userId: number) {
     const members = await this.memberRepository.find({ where: { userId } });
-    const membersWithDetails = await Promise.all(
+    return await Promise.all(
       members.map(async (member) => {
-        const user = plainToInstance(
-          User,
-          await this.usersService.findOne(member.userId)
-        );
-        const assignments = await this.assignmentsService.findByMemberId(
-          member.id
-        );
-        return {
-          ...member,
-          user,
-          assignments,
-        };
+        return await this.formatMember(member);
       })
     );
-    return membersWithDetails;
   }
 
-  update(id: number, updateMemberDto: UpdateMemberDto) {
+  public update(id: number, updateMemberDto: UpdateMemberDto) {
     delete updateMemberDto.projectId;
     delete updateMemberDto.userId;
     if (Object.keys(updateMemberDto).length === 0) {
@@ -117,11 +76,28 @@ export class MembersService {
     return this.memberRepository.update(id, updateMemberDto);
   }
 
-  async remove(id: number) {
+  public async remove(id: number) {
     const assignments = await this.assignmentsService.findByMemberId(id);
     for (const assignment of assignments) {
       await this.assignmentsService.remove(assignment.id);
     }
     return this.memberRepository.delete(id);
+  }
+
+  private async formatMember(member: Member) {
+    const assignments = await this.assignmentsService.findByMemberId(member.id);
+    const assignedTasks = await Promise.all(
+      assignments.map(async (assignment) => {
+        return await this.tasksService.findOne(assignment.taskId);
+      })
+    );
+    return {
+      ...member,
+      user: plainToInstance(
+        User,
+        await this.usersService.findOne(member.userId)
+      ),
+      assignedTasks,
+    };
   }
 }
