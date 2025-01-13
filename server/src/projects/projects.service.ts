@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
+import { plainToInstance } from "class-transformer";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateProjectDto } from "./dto/create-project.dto";
@@ -7,6 +8,7 @@ import { MembersService } from "src/members/members.service";
 import { StagesService } from "src/stages/stages.service";
 import { TasksService } from "src/tasks/tasks.service";
 import { UsersService } from "src/users/users.service";
+import { User } from "src/users/entities/user.entity";
 import { Project } from "./entities/project.entity";
 import { CreateMemberDto } from "src/members/dto/create-member.dto";
 import { CreateStageDto } from "src/stages/dto/create-stage.dto";
@@ -46,69 +48,51 @@ export class ProjectsService {
     return this.tasksService.create(createTaskDto);
   }
 
-  async findAll() {
+  public async findAll() {
     let projects = await this.projectRepository.find();
     projects = await Promise.all(
       projects.map(async (project) => {
-        return {
-          ...project,
-          members: await this.findMembers(project.id),
-          stages: await this.findStages(project.id),
-          tasks: await this.findTasks(project.id),
-          owner: await this.usersService.findOne(project.ownerId),
-        };
+        return await this.formatProject(project);
       })
     );
     return projects;
   }
 
-  async findOne(id: number) {
+  public async findOne(id: number) {
     const project = await this.projectRepository.findOne({ where: { id } });
-    return {
-      ...project,
-      members: await this.findMembers(id),
-      stages: await this.findStages(id),
-      tasks: await this.findTasks(id),
-      owner: await this.usersService.findOne(project.ownerId),
-    };
+    return await this.formatProject(project);
   }
 
-  async findByOwner(ownerId: number) {
+  public async findByOwner(ownerId: number) {
     let projects = await this.projectRepository.find({ where: { ownerId } });
     projects = await Promise.all(
       projects.map(async (project) => {
-        return {
-          ...project,
-          members: await this.findMembers(project.id),
-          stages: await this.findStages(project.id),
-          tasks: await this.findTasks(project.id),
-          owner: await this.usersService.findOne(project.ownerId),
-        };
+        return await this.formatProject(project);
       })
     );
     return projects;
   }
 
-  findMembers(id: number) {
+  public findMembers(id: number) {
     return this.membersService.findByProjectId(id);
   }
 
-  async findStages(id: number) {
+  public async findStages(id: number) {
     return await this.stagesService.findByProjectId(id);
   }
 
-  async findTasks(id: number) {
+  public async findTasks(id: number) {
     return await this.tasksService.findByProjectId(id);
   }
 
-  update(id: number, updateProjectDto: UpdateProjectDto) {
+  public update(id: number, updateProjectDto: UpdateProjectDto) {
     if (Object.keys(updateProjectDto).length === 0) {
       throw new BadRequestException("Empty update data");
     }
     return this.projectRepository.update(id, updateProjectDto);
   }
 
-  async remove(id: number) {
+  public async remove(id: number) {
     const members = await this.membersService.findByProjectId(id);
     const stages = await this.stagesService.findByProjectId(id);
     const tasks = await this.tasksService.findByProjectId(id);
@@ -122,5 +106,18 @@ export class ProjectsService {
       await this.membersService.remove(member.id);
     }
     return this.projectRepository.delete(id);
+  }
+
+  private async formatProject(project: Project) {
+    return {
+      ...project,
+      members: await this.findMembers(project.id),
+      stages: await this.findStages(project.id),
+      tasks: await this.findTasks(project.id),
+      owner: plainToInstance(
+        User,
+        await this.usersService.findOne(project.ownerId)
+      ),
+    };
   }
 }
