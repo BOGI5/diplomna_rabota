@@ -36,7 +36,7 @@ export class ProfileService {
     return await this.findProjects(members);
   }
 
-  public async findMembersProjects(userId: number) {
+  public async findMemberProjects(userId: number) {
     const members = await this.membersService.findByUserId(userId);
     return await this.findProjects(members);
   }

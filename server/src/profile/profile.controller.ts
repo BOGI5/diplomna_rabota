@@ -29,6 +29,6 @@ export class ProfileController {
 
   @Get("projects/member")
   findMembersProjects(@Req() req) {
-    return this.profileService.findMembersProjects(req.user.id);
+    return this.profileService.findMemberProjects(req.user.id);
   }
 }
