@@ -1,15 +1,5 @@
-import {
-  Controller,
-  Get,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  ValidationPipe,
-} from "@nestjs/common";
+import { Controller, Get, Param, Delete, UseGuards } from "@nestjs/common";
 import { MembersService } from "./members.service";
-import { UpdateMemberDto } from "./dto/update-member.dto";
 import { AccessTokenGuard } from "src/auth/guards/accessToken.guard";
 
 @Controller("members")
@@ -25,14 +15,6 @@ export class MembersController {
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.membersService.findOne(+id);
-  }
-
-  @Patch(":id")
-  update(
-    @Param("id") id: string,
-    @Body(ValidationPipe) updateMemberDto: UpdateMemberDto
-  ) {
-    return this.membersService.update(+id, updateMemberDto);
   }
 
   @Delete(":id")

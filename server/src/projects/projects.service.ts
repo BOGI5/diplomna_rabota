@@ -40,6 +40,28 @@ export class ProjectsService {
     return this.membersService.create(createMemberDto);
   }
 
+  public async promoteMember(projectId: number, memberId: number) {
+    const member = await this.membersService.findOne(memberId);
+    if (member.projectId !== projectId) {
+      throw new BadRequestException("Member is not part of this project");
+    }
+    if (member.memberType === "Owner" || member.memberType === "Admin") {
+      throw new BadRequestException("Can't promote owner or admin");
+    }
+    return this.membersService.update(memberId, { memberType: "Admin" });
+  }
+
+  public async demoteMember(projectId: number, memberId: number) {
+    const member = await this.membersService.findOne(memberId);
+    if (member.projectId !== projectId) {
+      throw new BadRequestException("Member is not part of this project");
+    }
+    if (member.memberType === "Owner") {
+      throw new BadRequestException("Can't demote owner");
+    }
+    return this.membersService.update(memberId, { memberType: "User" });
+  }
+
   public async addStage(createStageDto: CreateStageDto) {
     return this.stagesService.create(createStageDto);
   }
@@ -109,6 +131,7 @@ export class ProjectsService {
   }
 
   private async formatProject(project: Project) {
+    delete project.ownerId;
     return {
       ...project,
       members: await this.findMembers(project.id),

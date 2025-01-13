@@ -17,6 +17,6 @@ export class Member {
   @OneToOne(() => Project, (project: Project) => project.id)
   projectId: number;
 
-  @Column({ type: "enum", enum: ["Admin", "User"], default: "User" })
+  @Column({ type: "enum", enum: ["Owner", "Admin", "User"], default: "User" })
   memberType: string;
 }

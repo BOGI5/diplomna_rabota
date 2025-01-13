@@ -10,7 +10,7 @@ export class CreateMemberDto {
   projectId: number;
 
   @IsString()
-  @IsIn(["Admin", "User"])
+  @IsIn(["Owner", "Admin", "User"])
   @IsNotEmpty()
   memberType: string;
 }

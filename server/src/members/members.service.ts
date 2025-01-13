@@ -67,6 +67,13 @@ export class MembersService {
     );
   }
 
+  public async findMember(userId: number, projectId: number) {
+    const member = await this.memberRepository.findOne({
+      where: { userId, projectId },
+    });
+    return await this.formatMember(member);
+  }
+
   public update(id: number, updateMemberDto: UpdateMemberDto) {
     delete updateMemberDto.projectId;
     delete updateMemberDto.userId;
