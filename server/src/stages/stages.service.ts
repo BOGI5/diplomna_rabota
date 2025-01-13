@@ -18,42 +18,35 @@ export class StagesService {
     @Inject(forwardRef(() => TasksService)) private tasksService: TasksService
   ) {}
 
-  create(createStageDto: CreateStageDto) {
+  public create(createStageDto: CreateStageDto) {
     return this.stageRepository.save(createStageDto);
   }
 
-  async findAll() {
+  public async findAll() {
     const stages = await this.stageRepository.find();
     return await Promise.all(
       stages.map(async (stage) => {
-        return {
-          ...stage,
-          tasks: await this.tasksService.findByStageId(stage.id),
-        };
+        return await this.formatStage(stage);
       })
     );
   }
 
-  async findOne(id: number) {
-    return {
-      ...(await this.stageRepository.findOne({ where: { id } })),
-      tasks: await this.tasksService.findByStageId(id),
-    };
+  public async findOne(id: number) {
+    return await this.formatStage(
+      await this.stageRepository.findOne({ where: { id } })
+    );
   }
 
-  async findByProjectId(projectId: number) {
+  public async findByProjectId(projectId: number) {
     const stages = await this.stageRepository.find({ where: { projectId } });
     return await Promise.all(
       stages.map(async (stage) => {
-        return {
-          ...stage,
-          tasks: await this.tasksService.findByStageId(stage.id),
-        };
+        return await this.formatStage(stage);
       })
     );
   }
 
-  update(id: number, updateStageDto: UpdateStageDto) {
+  public update(id: number, updateStageDto: UpdateStageDto) {
     delete updateStageDto.projectId;
     if (Object.keys(updateStageDto).length === 0) {
       throw new BadRequestException("Empty update data");
@@ -61,11 +54,18 @@ export class StagesService {
     return this.stageRepository.update(id, updateStageDto);
   }
 
-  async remove(id: number) {
+  public async remove(id: number) {
     const tasks = await this.tasksService.findByStageId(id);
     for (const task of tasks) {
       await this.tasksService.remove(task.id);
     }
     return this.stageRepository.delete(id);
+  }
+
+  private async formatStage(stage: Stage) {
+    return {
+      ...stage,
+      tasks: await this.tasksService.findByStageId(stage.id),
+    };
   }
 }

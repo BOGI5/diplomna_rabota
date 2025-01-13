@@ -11,27 +11,27 @@ export class AssignmentsService {
     private assignmentRepository: Repository<Assignment>
   ) {}
 
-  create(createAssignmentDto: CreateAssignmentDto) {
+  public create(createAssignmentDto: CreateAssignmentDto) {
     return this.assignmentRepository.save(createAssignmentDto);
   }
 
-  findAll() {
+  public findAll() {
     return this.assignmentRepository.find();
   }
 
-  findOne(id: number) {
+  public findOne(id: number) {
     return this.assignmentRepository.findOne({ where: { id } });
   }
 
-  findByTaskId(taskId: number) {
+  public findByTaskId(taskId: number) {
     return this.assignmentRepository.find({ where: { taskId } });
   }
 
-  findByMemberId(memberId: number) {
+  public findByMemberId(memberId: number) {
     return this.assignmentRepository.find({ where: { memberId } });
   }
 
-  remove(id: number) {
+  public remove(id: number) {
     return this.assignmentRepository.delete(id);
   }
 }

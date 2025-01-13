@@ -18,13 +18,13 @@ export class StagesController {
   constructor(private readonly stagesService: StagesService) {}
 
   @Get()
-  async findAll() {
-    return await this.stagesService.findAll();
+  findAll() {
+    return this.stagesService.findAll();
   }
 
   @Get(":id")
-  async findOne(@Param("id") id: string) {
-    return await this.stagesService.findOne(+id);
+  findOne(@Param("id") id: string) {
+    return this.stagesService.findOne(+id);
   }
 
   @Patch(":id")

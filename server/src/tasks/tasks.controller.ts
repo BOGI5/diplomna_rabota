@@ -7,7 +7,6 @@ import {
   Delete,
   ValidationPipe,
   UseGuards,
-  Req,
 } from "@nestjs/common";
 import { TasksService } from "./tasks.service";
 import { UpdateTaskDto } from "./dto/update-task.dto";
@@ -19,13 +18,13 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Get()
-  async findAll() {
-    return await this.tasksService.findAll();
+  findAll() {
+    return this.tasksService.findAll();
   }
 
   @Get(":id")
-  async findOne(@Param("id") id: string) {
-    return await this.tasksService.findOne(+id);
+  findOne(@Param("id") id: string) {
+    return this.tasksService.findOne(+id);
   }
 
   @Patch(":id")

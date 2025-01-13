@@ -23,7 +23,7 @@ export class TasksService {
     private assignmentsService: AssignmentsService
   ) {}
 
-  async create(createTaskDto: CreateTaskDto) {
+  public async create(createTaskDto: CreateTaskDto) {
     const stage = await this.stagesService.findOne(createTaskDto.stageId);
     if (stage.projectId !== createTaskDto.projectId) {
       throw new BadRequestException("Stage does not belong to this project");
@@ -31,63 +31,39 @@ export class TasksService {
     return this.taskRepository.save(createTaskDto);
   }
 
-  async findAll() {
+  public async findAll() {
     const tasks = await this.taskRepository.find();
     return await Promise.all(
       tasks.map(async (task) => {
-        const assignments = await this.assignmentsService.findByTaskId(task.id);
-        const members = await Promise.all(
-          assignments.map(async (assignment) => {
-            return await this.membersService.findOne(assignment.memberId);
-          })
-        );
-        return { ...task, members };
+        return await this.formatTask(task);
       })
     );
   }
 
-  async findOne(id: number) {
+  public async findOne(id: number) {
     const task = await this.taskRepository.findOne({ where: { id } });
-    const assignments = await this.assignmentsService.findByTaskId(task.id);
-    const members = await Promise.all(
-      assignments.map(async (assignment) => {
-        return await this.membersService.findOne(assignment.memberId);
-      })
-    );
-    return { ...task, members };
+    return await this.formatTask(task);
   }
 
-  async findByProjectId(projectId: number) {
+  public async findByProjectId(projectId: number) {
     const tasks = await this.taskRepository.find({ where: { projectId } });
     return await Promise.all(
       tasks.map(async (task) => {
-        const assignments = await this.assignmentsService.findByTaskId(task.id);
-        const members = await Promise.all(
-          assignments.map(async (assignment) => {
-            return await this.membersService.findOne(assignment.memberId);
-          })
-        );
-        return { ...task, members };
+        return await this.formatTask(task);
       })
     );
   }
 
-  async findByStageId(stageId: number) {
+  public async findByStageId(stageId: number) {
     const tasks = await this.taskRepository.find({ where: { stageId } });
     return await Promise.all(
       tasks.map(async (task) => {
-        const assignments = await this.assignmentsService.findByTaskId(task.id);
-        const members = await Promise.all(
-          assignments.map(async (assignment) => {
-            return await this.membersService.findOne(assignment.memberId);
-          })
-        );
-        return { ...task, members };
+        return await this.formatTask(task);
       })
     );
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
+  public update(id: number, updateTaskDto: UpdateTaskDto) {
     delete updateTaskDto.projectId;
     if (Object.keys(updateTaskDto).length === 0) {
       throw new BadRequestException("Empty update data");
@@ -95,11 +71,21 @@ export class TasksService {
     return this.taskRepository.update(id, updateTaskDto);
   }
 
-  async remove(id: number) {
+  public async remove(id: number) {
     const assignments = await this.assignmentsService.findByTaskId(id);
     for (const assignment of assignments) {
       await this.assignmentsService.remove(assignment.id);
     }
     return this.taskRepository.delete(id);
+  }
+
+  private async formatTask(task: Task) {
+    const assignments = await this.assignmentsService.findByTaskId(task.id);
+    const assignedMembers = await Promise.all(
+      assignments.map(async (assignment) => {
+        return await this.membersService.findOne(assignment.memberId);
+      })
+    );
+    return { ...task, assignedMembers };
   }
 }
