@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { ProjectsService } from "src/projects/projects.service";
 import { MembersService } from "src/members/members.service";
 import { TasksService } from "src/tasks/tasks.service";
+import { Member } from "src/members/entities/member.entity";
 
 @Injectable()
 export class ProfileService {
@@ -11,7 +12,7 @@ export class ProfileService {
     private tasksService: TasksService
   ) {}
 
-  async findTasks(userId: number) {
+  public async findTasks(userId: number) {
     const members = await this.membersService.findByUserId(userId);
     const tasks = [];
     await Promise.all(
@@ -24,11 +25,36 @@ export class ProfileService {
     return tasks;
   }
 
-  async findMembers(userId: number) {
-    return await this.membersService.findByUserId(userId);
+  public async findOwnerProjects(userId: number) {
+    return await this.projectsService.findByOwner(userId);
   }
 
-  async findProjects(userId: number) {
-    return await this.projectsService.findByOwner(userId);
+  public async findAdminProjects(userId: number) {
+    const members = (await this.membersService.findByUserId(userId)).filter(
+      (member) => member.memberType === "Admin"
+    );
+    return await this.findProjects(members);
+  }
+
+  public async findMembersProjects(userId: number) {
+    const members = await this.membersService.findByUserId(userId);
+    return await this.findProjects(members);
+  }
+
+  public async findAllProjects(userId: number) {
+    const members = await this.membersService.findByUserId(userId);
+    const ownerProjects = await this.projectsService.findByOwner(userId);
+    const projects = [];
+    projects.push(...(await this.findProjects(members)));
+    projects.push(...ownerProjects);
+    return projects;
+  }
+
+  private async findProjects(members: Member[]) {
+    return await Promise.all(
+      members.map(async (member) => {
+        return await this.projectsService.findOne(member.projectId);
+      })
+    );
   }
 }

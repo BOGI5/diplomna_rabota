@@ -8,17 +8,27 @@ export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Get("tasks")
-  async findAssignments(@Req() req) {
-    return await this.profileService.findTasks(req.user.id);
-  }
-
-  @Get("members")
-  async findMembers(@Req() req) {
-    return await this.profileService.findMembers(req.user.id);
+  findAssignments(@Req() req) {
+    return this.profileService.findTasks(req.user.id);
   }
 
   @Get("projects")
-  async findProjects(@Req() req) {
-    return await this.profileService.findProjects(req.user.id);
+  findProjects(@Req() req) {
+    return this.profileService.findAllProjects(req.user.id);
+  }
+
+  @Get("projects/owner")
+  findOwnerProjects(@Req() req) {
+    return this.profileService.findOwnerProjects(req.user.id);
+  }
+
+  @Get("projects/admin")
+  findAdminProjects(@Req() req) {
+    return this.profileService.findAdminProjects(req.user.id);
+  }
+
+  @Get("projects/member")
+  findMembersProjects(@Req() req) {
+    return this.profileService.findMembersProjects(req.user.id);
   }
 }
