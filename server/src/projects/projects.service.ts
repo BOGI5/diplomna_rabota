@@ -104,6 +104,16 @@ export class ProjectsService {
     return this.membersService.update(memberId, { memberType: "User" });
   }
 
+  public async leaveProject(userId: number, projectId: number) {
+    const member = await this.membersService.findMember(userId, projectId);
+    if (member.memberType === "Owner") {
+      throw new BadRequestException(
+        "Can't leave project as owner. Please transfer ownership first."
+      );
+    }
+    return this.membersService.remove(member.id);
+  }
+
   public async removeMember(
     projectId: number,
     memberId: number,

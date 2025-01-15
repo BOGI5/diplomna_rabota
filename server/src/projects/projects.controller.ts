@@ -69,8 +69,13 @@ export class ProjectsController {
     return this.projectsService.demoteMember(+id, +memberId);
   }
 
+  @Delete(":id/leave")
+  leaveProject(@Req() req, @Param("id") id: string) {
+    return this.projectsService.leaveProject(req.user.id, +id);
+  }
+
   @Delete(":id/members/:memberId")
-  @Roles("Owner", "Admin")
+  @Roles("Admin", "Owner")
   removeMember(
     @Req() req,
     @Param("id") id: string,
