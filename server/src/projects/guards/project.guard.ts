@@ -23,14 +23,14 @@ export default class ProjectGuard implements CanActivate {
       return true;
     }
 
-    const roles = this.reflector.get<string[]>("roles", context.getHandler());
-    if (!roles) {
-      return true;
-    }
-
     const member = await this.membersService.findMember(user.id, projectId);
     if (!member) {
       return false;
+    }
+
+    const roles = this.reflector.get<string[]>("roles", context.getHandler());
+    if (!roles) {
+      return true;
     }
 
     return roles.includes(member.memberType);
