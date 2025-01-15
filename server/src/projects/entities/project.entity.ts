@@ -6,10 +6,6 @@ export class Project {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => User, (user: User) => user.id)
-  @Column()
-  ownerId: number;
-
   @Column()
   name: string;
 

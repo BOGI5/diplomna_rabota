@@ -69,6 +69,16 @@ export class ProjectsController {
     return this.projectsService.demoteMember(+id, +memberId);
   }
 
+  @Delete(":id/members/:memberId")
+  @Roles("Owner", "Admin")
+  removeMember(
+    @Req() req,
+    @Param("id") id: string,
+    @Param("memberId") memberId: string
+  ) {
+    return this.projectsService.removeMember(+id, +memberId, req.user.id);
+  }
+
   @Get(":id/stages")
   findStages(@Param("id") id: string) {
     return this.projectsService.findStages(+id);

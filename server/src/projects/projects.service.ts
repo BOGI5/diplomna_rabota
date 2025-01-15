@@ -1,5 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { plainToInstance } from "class-transformer";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateProjectDto } from "./dto/create-project.dto";
@@ -7,8 +10,6 @@ import { UpdateProjectDto } from "./dto/update-project.dto";
 import { MembersService } from "src/members/members.service";
 import { StagesService } from "src/stages/stages.service";
 import { TasksService } from "src/tasks/tasks.service";
-import { UsersService } from "src/users/users.service";
-import { User } from "src/users/entities/user.entity";
 import { Project } from "./entities/project.entity";
 import { CreateMemberDto } from "src/members/dto/create-member.dto";
 import { CreateStageDto } from "src/stages/dto/create-stage.dto";
@@ -20,46 +21,23 @@ export class ProjectsService {
     @InjectRepository(Project) private projectRepository: Repository<Project>,
     private membersService: MembersService,
     private stagesService: StagesService,
-    private tasksService: TasksService,
-    private usersService: UsersService
+    private tasksService: TasksService
   ) {}
 
   public async create(createProjectDto: CreateProjectDto, ownerId: number) {
     const project = await this.projectRepository.save({
       ...createProjectDto,
-      ownerId,
+    });
+    await this.membersService.create({
+      userId: ownerId,
+      projectId: project.id,
+      memberType: "Owner",
     });
     return project;
   }
 
   public async addMember(createMemberDto: CreateMemberDto) {
-    const { ownerId } = await this.findOne(createMemberDto.projectId);
-    if (createMemberDto.userId === ownerId) {
-      throw new BadRequestException("Owner can't be added as a member");
-    }
     return this.membersService.create(createMemberDto);
-  }
-
-  public async promoteMember(projectId: number, memberId: number) {
-    const member = await this.membersService.findOne(memberId);
-    if (member.projectId !== projectId) {
-      throw new BadRequestException("Member is not part of this project");
-    }
-    if (member.memberType === "Owner" || member.memberType === "Admin") {
-      throw new BadRequestException("Can't promote owner or admin");
-    }
-    return this.membersService.update(memberId, { memberType: "Admin" });
-  }
-
-  public async demoteMember(projectId: number, memberId: number) {
-    const member = await this.membersService.findOne(memberId);
-    if (member.projectId !== projectId) {
-      throw new BadRequestException("Member is not part of this project");
-    }
-    if (member.memberType === "Owner") {
-      throw new BadRequestException("Can't demote owner");
-    }
-    return this.membersService.update(memberId, { memberType: "User" });
   }
 
   public async addStage(createStageDto: CreateStageDto) {
@@ -85,16 +63,6 @@ export class ProjectsService {
     return await this.formatProject(project);
   }
 
-  public async findByOwner(ownerId: number) {
-    let projects = await this.projectRepository.find({ where: { ownerId } });
-    projects = await Promise.all(
-      projects.map(async (project) => {
-        return await this.formatProject(project);
-      })
-    );
-    return projects;
-  }
-
   public findMembers(id: number) {
     return this.membersService.findByProjectId(id);
   }
@@ -114,6 +82,50 @@ export class ProjectsService {
     return this.projectRepository.update(id, updateProjectDto);
   }
 
+  public async promoteMember(projectId: number, memberId: number) {
+    const member = await this.membersService.findOne(memberId);
+    if (member.projectId !== projectId) {
+      throw new BadRequestException("Member is not part of this project");
+    }
+    if (member.memberType === "Owner" || member.memberType === "Admin") {
+      throw new BadRequestException("Can't promote owner or admin");
+    }
+    return this.membersService.update(memberId, { memberType: "Admin" });
+  }
+
+  public async demoteMember(projectId: number, memberId: number) {
+    const member = await this.membersService.findOne(memberId);
+    if (member.projectId !== projectId) {
+      throw new BadRequestException("Member is not part of this project");
+    }
+    if (member.memberType === "Owner") {
+      throw new BadRequestException("Can't demote owner");
+    }
+    return this.membersService.update(memberId, { memberType: "User" });
+  }
+
+  public async removeMember(
+    projectId: number,
+    memberId: number,
+    issuerId: number
+  ) {
+    const member = await this.membersService.findOne(memberId);
+    const issuer = await this.membersService.findMember(issuerId, projectId);
+    if (member.projectId !== projectId) {
+      throw new ForbiddenException("Member is not part of this project");
+    }
+
+    if (issuer.memberType === "Admin" && member.memberType === "Admin") {
+      throw new ForbiddenException("Admins can't remove other admins");
+    }
+
+    if (member.memberType === "Owner") {
+      throw new ForbiddenException("Can't remove owner");
+    }
+
+    return this.membersService.remove(memberId);
+  }
+
   public async remove(id: number) {
     const members = await this.membersService.findByProjectId(id);
     const stages = await this.stagesService.findByProjectId(id);
@@ -131,16 +143,11 @@ export class ProjectsService {
   }
 
   private async formatProject(project: Project) {
-    delete project.ownerId;
     return {
       ...project,
       members: await this.findMembers(project.id),
       stages: await this.findStages(project.id),
       tasks: await this.findTasks(project.id),
-      owner: plainToInstance(
-        User,
-        await this.usersService.findOne(project.ownerId)
-      ),
     };
   }
 }
