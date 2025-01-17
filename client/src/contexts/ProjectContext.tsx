@@ -23,6 +23,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
   const apiService = new ApiService();
 
   const setProjectData = (project: Project, user: User) => {
+    project.members = sortMembers(project.members);
     setProject(project);
 
     const member = project.members.find((member) => member.userId === user.id);
@@ -36,9 +37,21 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
     );
   };
 
+  const sortMembers = (members: Member[]): Member[] => {
+    const order = { Owner: 0, Admin: 1, User: 2 };
+    return members.sort((a, b) => {
+      return (
+        order[a.memberType as keyof typeof order] -
+        order[b.memberType as keyof typeof order]
+      );
+    });
+  };
+
   const updateProjectData = async () => {
     await apiService.get(`/projects/${project?.id}`).then((res) => {
-      setProject(res.data);
+      const updatedProject = res.data;
+      updatedProject.members = sortMembers(updatedProject.members);
+      setProject(updatedProject);
     });
   };
 
