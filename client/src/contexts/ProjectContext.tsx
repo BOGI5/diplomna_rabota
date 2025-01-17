@@ -2,13 +2,14 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import Project from "../interfaces/project.interface";
 import Member from "../interfaces/member.interface";
 import User from "../interfaces/user.interface";
+import ApiService from "../services/api";
 
 interface ProjectContextType {
   project: Project | null;
   currentMember: Member | null;
-  isAdmin: boolean;
+  permissions: number;
   setProjectData: (project: Project, user: User) => void;
-  updateProjectData: (project: Project) => void;
+  updateProjectData: () => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -18,18 +19,27 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [project, setProject] = useState<Project | null>(null);
   const [currentMember, setCurrentMember] = useState<Member | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [permissions, setPermissions] = useState<number>(0);
+  const apiService = new ApiService();
 
   const setProjectData = (project: Project, user: User) => {
     setProject(project);
 
     const member = project.members.find((member) => member.userId === user.id);
     setCurrentMember(member || null);
-    setIsAdmin(member?.memberType === "Admin");
+    setPermissions(
+      member?.memberType === "Owner"
+        ? 2
+        : member?.memberType === "Admin"
+        ? 1
+        : 0
+    );
   };
 
-  const updateProjectData = (project: Project) => {
-    setProject(project);
+  const updateProjectData = async () => {
+    await apiService.get(`/projects/${project?.id}`).then((res) => {
+      setProject(res.data);
+    });
   };
 
   return (
@@ -37,7 +47,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
       value={{
         project,
         currentMember,
-        isAdmin,
+        permissions,
         setProjectData,
         updateProjectData,
       }}

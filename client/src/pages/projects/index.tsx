@@ -13,7 +13,7 @@ export default function Projects() {
   const [cards, setCards] = useState<React.ReactNode[]>([]);
 
   useEffect(() => {
-    apiService.get("/projects/me").then((res) => {
+    apiService.get("/me/projects").then((res) => {
       const projectCards = res.data.map((project: Project) => (
         <ProjectCard
           key={project.id}

@@ -17,7 +17,7 @@ export default function Home() {
   const [cards, setCards] = useState<React.ReactNode[]>([]);
 
   useEffect(() => {
-    apiService.get("/projects/me").then((res) => {
+    apiService.get("/me/projects").then((res) => {
       const projectCards = res.data
         .slice(0, 2)
         .map((project: Project) => (

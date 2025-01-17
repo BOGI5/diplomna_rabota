@@ -32,7 +32,7 @@ export default function Header() {
           },
         },
         {
-          label: "Tasks",
+          label: "My Tasks",
           icon: "pi pi-clipboard",
         },
         {

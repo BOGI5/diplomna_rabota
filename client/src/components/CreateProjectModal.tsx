@@ -21,56 +21,59 @@ export default function CreateProjectModal(props: CreateProjectModalProps) {
       draggable={false}
       onHide={() => props.setVisible(false)}
       header="Create new project"
-      footer={
-        <div>
-          <Button
-            label="Cancel"
-            icon="pi pi-times"
-            onClick={() => props.setVisible(false)}
-            className="p-button-text"
-          />
-          <Button
-            label="Create"
-            icon="pi pi-check"
-            onClick={async () => {
-              if (projectName.length === 0) {
+    >
+      <form
+        className="flex flex-column gap-3"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (projectName.length === 0) {
+            showMessage({
+              severity: "error",
+              summary: "Error",
+              detail: "Project name is required",
+            });
+            return;
+          }
+          apiService
+            .post("/projects", {
+              name: projectName,
+            })
+            .then(
+              (res) => {
+                window.location.href = `${environment.clientUrl}${environment.clientProjectsUrl}/${res.data.id}`;
+              },
+              (err) => {
                 showMessage({
                   severity: "error",
                   summary: "Error",
-                  detail: "Project name is required",
+                  detail: err.message,
                 });
-                return;
+                props.setVisible(false);
               }
-              apiService
-                .post("/projects", {
-                  name: projectName,
-                })
-                .then(
-                  (res) => {
-                    localStorage.setItem("project", res.data.id);
-                    window.location.href = `${environment.clientUrl}${environment.clientProjectsUrl}`;
-                  },
-                  (err) => {
-                    showMessage({
-                      severity: "error",
-                      summary: "Error",
-                      detail: err.message,
-                    });
-                    props.setVisible(false);
-                  }
-                );
+            );
+        }}
+      >
+        <InputText
+          className="mt-1"
+          placeholder="Project name"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          invalid={projectName.length === 0}
+        />
+        <div className="flex flex-row justify-content-between gap-3">
+          <Button
+            label="Cancel"
+            icon="pi pi-times"
+            onClick={() => {
+              setProjectName("");
+              props.setVisible(false);
             }}
+            type="button"
+            className="p-button-text"
           />
+          <Button label="Create" icon="pi pi-check" type="submit" />
         </div>
-      }
-    >
-      <InputText
-        className="mt-1"
-        placeholder="Project name"
-        value={projectName}
-        onChange={(e) => setProjectName(e.target.value)}
-        invalid={projectName.length === 0}
-      />
+      </form>
     </Dialog>
   );
 }

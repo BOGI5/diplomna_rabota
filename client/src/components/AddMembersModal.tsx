@@ -19,7 +19,7 @@ export default function AddMembersModal({
   setVisible: (visible: boolean) => void;
 }) {
   const apiService = new ApiService();
-  const { project, updateProjectData } = useProjectContext();
+  const { updateProjectData } = useProjectContext();
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const { showMessage } = useNotificationContext();
   const { id } = useParams<{ id: string }>();
@@ -77,10 +77,7 @@ export default function AddMembersModal({
               )
             );
             setSelectedUsers([]);
-            const projectData = await apiService.get(
-              `/projects/${project?.id}`
-            );
-            updateProjectData(projectData.data);
+            updateProjectData();
             setVisible(false);
           }}
         >
@@ -93,6 +90,7 @@ export default function AddMembersModal({
             value={selectedUsers}
             onChange={(e) => setSelectedUsers(e.value)}
             itemTemplate={userTemplate}
+            style={{ maxWidth: "75vw" }}
           />
           <div className="flex flex-row gap-3">
             <Button

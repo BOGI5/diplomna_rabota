@@ -14,7 +14,7 @@ export default function Project() {
   const { user } = useAuthContext();
   const apiService = new ApiService();
   const { id } = useParams<{ id: string }>();
-  const { isAdmin, setProjectData } = useProjectContext();
+  const { permissions, setProjectData } = useProjectContext();
 
   useEffect(() => {
     if (user === null) return;
@@ -41,7 +41,7 @@ export default function Project() {
         <TabPanel header="Members" leftIcon="pi pi-users mr-2">
           <ProjectMembers />
         </TabPanel>
-        {isAdmin && (
+        {permissions > 1 && (
           <TabPanel header="Settings" leftIcon="pi pi-sliders-h mr-2">
             <ProjectSettings />
           </TabPanel>
