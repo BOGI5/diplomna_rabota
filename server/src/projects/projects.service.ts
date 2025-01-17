@@ -112,8 +112,8 @@ export class ProjectsService {
     if (member.projectId !== projectId) {
       throw new BadRequestException("Member is not part of this project");
     }
-    if (member.memberType === "Owner") {
-      throw new BadRequestException("Can't demote owner");
+    if (member.memberType === "Owner" || member.memberType === "User") {
+      throw new BadRequestException("Can't demote owner or user");
     }
     return this.membersService.update(memberId, { memberType: "User" });
   }
