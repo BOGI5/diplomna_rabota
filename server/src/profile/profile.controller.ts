@@ -26,9 +26,4 @@ export class ProfileController {
   findAdminProjects(@Req() req) {
     return this.profileService.findAdminProjects(req.user.id);
   }
-
-  @Get("projects/member")
-  findMembersProjects(@Req() req) {
-    return this.profileService.findMemberProjects(req.user.id);
-  }
 }

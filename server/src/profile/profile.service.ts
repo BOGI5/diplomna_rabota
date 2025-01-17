@@ -26,7 +26,10 @@ export class ProfileService {
   }
 
   public async findOwnerProjects(userId: number) {
-    return await this.projectsService.findByOwner(userId);
+    const members = (await this.membersService.findByUserId(userId)).filter(
+      (member) => member.memberType === "Owner"
+    );
+    return await this.findProjects(members);
   }
 
   public async findAdminProjects(userId: number) {
@@ -36,18 +39,9 @@ export class ProfileService {
     return await this.findProjects(members);
   }
 
-  public async findMemberProjects(userId: number) {
-    const members = await this.membersService.findByUserId(userId);
-    return await this.findProjects(members);
-  }
-
   public async findAllProjects(userId: number) {
     const members = await this.membersService.findByUserId(userId);
-    const ownerProjects = await this.projectsService.findByOwner(userId);
-    const projects = [];
-    projects.push(...(await this.findProjects(members)));
-    projects.push(...ownerProjects);
-    return projects;
+    return await this.findProjects(members);
   }
 
   private async findProjects(members: Member[]) {
