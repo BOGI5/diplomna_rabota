@@ -135,7 +135,10 @@ export class ProjectsController {
 
   @Patch(":id")
   @Roles("Owner")
-  update(@Param("id") id: string, @Body() updateProjectDto: UpdateProjectDto) {
+  update(
+    @Param("id") id: string,
+    @Body(ValidationPipe) updateProjectDto: UpdateProjectDto
+  ) {
     return this.projectsService.update(+id, updateProjectDto);
   }
 
