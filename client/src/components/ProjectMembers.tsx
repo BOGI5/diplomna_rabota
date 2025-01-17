@@ -24,7 +24,7 @@ export default function ProjectMembers() {
     window.innerWidth < 400
   );
 
-  window.onresize = () => {
+  onresize = () => {
     setSmallScreen(window.innerWidth < 600);
     setExtraSmallScreen(window.innerWidth < 400);
   };
@@ -72,12 +72,8 @@ export default function ProjectMembers() {
 
   const memberTemplate = (member: Member) => {
     return (
-      <div className="flex flex-row justify-content-between align-items-center">
-        <div
-          className={`flex flex-row align-items-center gap-${
-            extraSmallScreen ? 1 : 3
-          } my-2`}
-        >
+      <div className="flex flex-row justify-content-between align-items-center gap-2">
+        <div className="flex flex-row align-items-center gap-3 my-2">
           <Avatar
             style={{ backgroundColor: "transparent" }}
             image={member.user.picture}
@@ -86,21 +82,33 @@ export default function ProjectMembers() {
             icon="pi pi-user"
           />
 
-          <h2>{member.user.firstName + " " + member.user.lastName}</h2>
-
-          <Tag
-            value={member.memberType}
-            severity={
-              member.memberType === "Owner"
-                ? "danger"
-                : member.memberType === "Admin"
-                ? "warning"
-                : "info"
-            }
-          />
-          {currentMember?.user.id === member.user.id && (
-            <Tag value="You" severity="success" />
+          {extraSmallScreen ? (
+            <div className="flex flex-column">
+              <h3 className="my-0">{member.user.firstName}</h3>
+              <h3 className="my-0">{member.user.lastName}</h3>
+            </div>
+          ) : (
+            <h2>{member.user.firstName + " " + member.user.lastName}</h2>
           )}
+          <div
+            className={`flex flex-${extraSmallScreen ? "column" : "row"} gap-${
+              extraSmallScreen ? 1 : 3
+            }`}
+          >
+            <Tag
+              value={member.memberType}
+              severity={
+                member.memberType === "Owner"
+                  ? "danger"
+                  : member.memberType === "Admin"
+                  ? "warning"
+                  : "info"
+              }
+            />
+            {currentMember?.user.id === member.user.id && (
+              <Tag value="You" severity="success" />
+            )}
+          </div>
         </div>
 
         <div className="flex flex-row gap-3 mr-2">

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Dialog } from "primereact/dialog";
 import { Avatar } from "primereact/avatar";
 import { Button } from "primereact/button";
@@ -20,6 +21,14 @@ export default function EditMemberModal({
     member?.memberType === "Owner" ||
     permissions < 1;
 
+  const [smallScreen, setSmallScreen] = useState<boolean>(
+    window.innerWidth < 600
+  );
+
+  onresize = () => {
+    setSmallScreen(window.innerWidth < 600);
+  };
+
   return (
     <Dialog
       header="Edit member"
@@ -41,7 +50,7 @@ export default function EditMemberModal({
           </h2>
         </div>
 
-        <div className="flex flex-row gap-3">
+        <div className="flex flex-row gap-3 justify-content-center">
           {member?.id === currentMember?.id ? (
             <>
               <Button
@@ -71,7 +80,13 @@ export default function EditMemberModal({
               />
             </>
           ) : (
-            <>
+            <div
+              className={`flex flex-${
+                smallScreen && member?.memberType === "Admin" && !canEdit
+                  ? "column"
+                  : "row"
+              } gap-3`}
+            >
               <Button
                 onClick={async () => {
                   if (member?.memberType === "Admin") {
@@ -123,40 +138,42 @@ export default function EditMemberModal({
                 outlined
               />
 
-              {member?.memberType === "Admin" && permissions > 1 && (
-                <Button
-                  onClick={async () => {
-                    await apiService.patch(
-                      `/projects/${member?.projectId}/members/${member?.id}/demote`,
-                      {}
-                    );
-                    if (member) {
-                      member.memberType = "User";
-                    }
-                    updateProjectData();
-                  }}
-                  label="Demote to User"
-                  icon="pi pi-angle-double-down"
-                  iconPos="right"
-                  severity="info"
-                  outlined
-                />
-              )}
+              <div className="flex flex-row gap-3">
+                {member?.memberType === "Admin" && permissions > 1 && (
+                  <Button
+                    onClick={async () => {
+                      await apiService.patch(
+                        `/projects/${member?.projectId}/members/${member?.id}/demote`,
+                        {}
+                      );
+                      if (member) {
+                        member.memberType = "User";
+                      }
+                      updateProjectData();
+                    }}
+                    label="Demote to User"
+                    icon="pi pi-angle-double-down"
+                    iconPos="right"
+                    severity="info"
+                    outlined
+                  />
+                )}
 
-              <Button
-                icon="pi pi-trash"
-                severity="danger"
-                outlined
-                disabled={canEdit}
-                onClick={async () => {
-                  await apiService.delete(
-                    `/projects/${member?.projectId}/members/${member?.id}`
-                  );
-                  updateProjectData();
-                  setMember(undefined);
-                }}
-              />
-            </>
+                <Button
+                  icon="pi pi-trash"
+                  severity="danger"
+                  outlined
+                  disabled={canEdit}
+                  onClick={async () => {
+                    await apiService.delete(
+                      `/projects/${member?.projectId}/members/${member?.id}`
+                    );
+                    updateProjectData();
+                    setMember(undefined);
+                  }}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>
