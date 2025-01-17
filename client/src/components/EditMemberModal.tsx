@@ -74,12 +74,24 @@ export default function EditMemberModal({
             <>
               <Button
                 onClick={async () => {
-                  await apiService.patch(
-                    `/projects/${member?.projectId}/members/${member?.id}/promote`,
-                    {}
-                  );
-                  if (member) {
-                    member.memberType = "Admin";
+                  if (member?.memberType === "Admin") {
+                    await apiService.post(
+                      `/projects/${member?.projectId}/transfer-ownership`,
+                      {
+                        newOwnerId: member?.id,
+                      }
+                    );
+                    if (member) {
+                      member.memberType = "Owner";
+                    }
+                  } else {
+                    await apiService.patch(
+                      `/projects/${member?.projectId}/members/${member?.id}/promote`,
+                      {}
+                    );
+                    if (member) {
+                      member.memberType = "Admin";
+                    }
                   }
                   updateProjectData();
                 }}
