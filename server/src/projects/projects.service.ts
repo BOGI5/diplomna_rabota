@@ -93,6 +93,10 @@ export class ProjectsService {
     if (Object.keys(updateProjectDto).length === 0) {
       throw new BadRequestException("Empty update data");
     }
+    if (updateProjectDto.removeDeadline) {
+      updateProjectDto.deadline = null;
+    }
+    delete updateProjectDto.removeDeadline;
     return this.projectRepository.update(id, updateProjectDto);
   }
 

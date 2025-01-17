@@ -87,6 +87,8 @@ export default function ProjectSettings() {
                 if (editProject.name.edited) name = editProject.name.value;
                 await apiService
                   .patch(`/projects/${project?.id}`, {
+                    removeDeadline:
+                      deadline === undefined && editProject.deadline.edited,
                     description: description,
                     deadline: deadline,
                     name: name,
