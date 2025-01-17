@@ -16,6 +16,7 @@ import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { Roles } from "./decorators/roles.decorator";
 import { AccessTokenGuard } from "src/auth/guards/accessToken.guard";
+import { TransferOwnershipDto } from "./dto/transfer-ownership.dto";
 import { AddMemberDto } from "./dto/add-member.dto";
 import { AddStageDto } from "./dto/add-stage.dto";
 import { AddTaskDto } from "./dto/add-task.dto";
@@ -38,6 +39,20 @@ export class ProjectsController {
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.projectsService.findOne(+id);
+  }
+
+  @Post(":id/transfer-ownership")
+  @Roles("Owner")
+  transferOwnership(
+    @Body(ValidationPipe) transferOwnershipDto: TransferOwnershipDto,
+    @Req() req,
+    @Param("id") id: string
+  ) {
+    return this.projectsService.transferOwnership(
+      +id,
+      req.user.id,
+      transferOwnershipDto.newOwnerId
+    );
   }
 
   @Get(":id/members")

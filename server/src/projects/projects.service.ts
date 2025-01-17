@@ -75,6 +75,20 @@ export class ProjectsService {
     return await this.tasksService.findByProjectId(id);
   }
 
+  public async transferOwnership(
+    id: number,
+    ownerId: number,
+    newOwnerId: number
+  ) {
+    const owner = await this.membersService.findMember(ownerId, id);
+    const newOwner = await this.membersService.findOne(newOwnerId);
+    if (newOwner.projectId !== id) {
+      throw new BadRequestException("New owner is not part of this project");
+    }
+    await this.membersService.update(newOwner.id, { memberType: "Owner" });
+    await this.membersService.update(owner.id, { memberType: "Admin" });
+  }
+
   public update(id: number, updateProjectDto: UpdateProjectDto) {
     if (Object.keys(updateProjectDto).length === 0) {
       throw new BadRequestException("Empty update data");
