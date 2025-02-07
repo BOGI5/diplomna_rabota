@@ -12,8 +12,8 @@ export class Task {
   projectId: number;
 
   @OneToOne(() => Stage, (stage) => stage.id)
-  @Column()
-  stageId: number;
+  @Column({ nullable: true })
+  stageId: number | null;
 
   @Column()
   name: string;

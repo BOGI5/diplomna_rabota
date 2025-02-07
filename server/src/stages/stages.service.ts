@@ -10,6 +10,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Stage } from "./entities/stage.entity";
 import { Repository } from "typeorm";
 import { TasksService } from "src/tasks/tasks.service";
+import { UpdateTaskOrderDto } from "./dto/update-task-order.dto";
 
 @Injectable()
 export class StagesService {
@@ -19,7 +20,16 @@ export class StagesService {
   ) {}
 
   public create(createStageDto: CreateStageDto) {
-    return this.stageRepository.save(createStageDto);
+    return this.stageRepository.save({ ...createStageDto, tasks: [] });
+  }
+
+  public async addTask(stageId: number, taskId: number) {
+    const stage = await this.stageRepository.findOne({
+      where: { id: stageId },
+    });
+    stage.tasks.push(taskId);
+    await this.tasksService.update(taskId, { stageId });
+    return this.stageRepository.update(stage.id, { tasks: stage.tasks });
   }
 
   public async findAll() {
@@ -54,6 +64,41 @@ export class StagesService {
     return this.stageRepository.update(id, updateStageDto);
   }
 
+  public async updateTaskOrder(
+    id: number,
+    updateTaskOrderDto: UpdateTaskOrderDto
+  ) {
+    const stage = await this.stageRepository.findOne({ where: { id } });
+    for (const taskId of updateTaskOrderDto.taskOrder) {
+      if (!stage.tasks.includes(taskId)) {
+        throw new BadRequestException("Task does not belong to this stage");
+      }
+    }
+    for (const taskId of stage.tasks.map(Number)) {
+      if (!updateTaskOrderDto.taskOrder.includes(Number(taskId))) {
+        throw new BadRequestException("All tasks must be included");
+      }
+    }
+    if (
+      new Set(updateTaskOrderDto.taskOrder).size !==
+      updateTaskOrderDto.taskOrder.length
+    ) {
+      throw new BadRequestException("Duplicate tasks");
+    }
+    return this.stageRepository.update(id, {
+      tasks: updateTaskOrderDto.taskOrder,
+    });
+  }
+
+  public async removeTask(stageId: number, taskId: number) {
+    const stage = await this.stageRepository.findOne({
+      where: { id: stageId },
+    });
+    stage.tasks = stage.tasks.filter((id) => id !== taskId);
+    await this.tasksService.update(taskId, { stageId: null });
+    return this.stageRepository.update(stage.id, { tasks: stage.tasks });
+  }
+
   public async remove(id: number) {
     const tasks = await this.tasksService.findByStageId(id);
     for (const task of tasks) {
@@ -65,7 +110,11 @@ export class StagesService {
   private async formatStage(stage: Stage) {
     return {
       ...stage,
-      tasks: await this.tasksService.findByStageId(stage.id),
+      tasks: await Promise.all(
+        stage.tasks.map(async (taskId: number) => {
+          return await this.tasksService.findOne(taskId);
+        })
+      ),
     };
   }
 }

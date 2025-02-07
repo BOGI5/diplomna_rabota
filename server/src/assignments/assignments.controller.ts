@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Delete, UseGuards } from "@nestjs/common";
+import { Controller, Get, Param, UseGuards } from "@nestjs/common";
 import { AssignmentsService } from "./assignments.service";
 import { AccessTokenGuard } from "src/auth/guards/accessToken.guard";
 
@@ -15,10 +15,5 @@ export class AssignmentsController {
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.assignmentsService.findOne(+id);
-  }
-
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.assignmentsService.remove(+id);
   }
 }

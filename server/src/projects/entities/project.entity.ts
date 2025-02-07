@@ -1,5 +1,4 @@
-import { User } from "src/users/entities/user.entity";
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Project {
@@ -14,4 +13,7 @@ export class Project {
 
   @Column({ nullable: true })
   deadline: Date | null;
+
+  @Column({ type: "jsonb" })
+  stages: Number[];
 }

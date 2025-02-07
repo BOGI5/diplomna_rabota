@@ -12,4 +12,7 @@ export class Stage {
 
   @Column()
   name: string;
+
+  @Column({ type: "jsonb" })
+  tasks: Number[];
 }

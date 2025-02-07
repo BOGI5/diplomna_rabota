@@ -25,9 +25,11 @@ export class TasksService {
   ) {}
 
   public async create(createTaskDto: CreateTaskDto) {
-    const stage = await this.stagesService.findOne(createTaskDto.stageId);
-    if (stage.projectId !== createTaskDto.projectId) {
-      throw new BadRequestException("Stage does not belong to this project");
+    if (createTaskDto.stageId) {
+      const stage = await this.stagesService.findOne(createTaskDto.stageId);
+      if (stage.projectId !== createTaskDto.projectId) {
+        throw new BadRequestException("Stage does not belong to this project");
+      }
     }
     return this.taskRepository.save(createTaskDto);
   }
@@ -82,11 +84,13 @@ export class TasksService {
 
   private async formatTask(task: Task) {
     const assignments = await this.assignmentsService.findByTaskId(task.id);
-    const assignedMembers = await Promise.all(
-      assignments.map(async (assignment) => {
-        return await this.membersService.findOne(assignment.memberId);
-      })
-    );
-    return { ...task, assignedMembers };
+    return {
+      ...task,
+      assignedMembers: await Promise.all(
+        assignments.map(async (assignment) => {
+          return await this.membersService.findOne(assignment.memberId);
+        })
+      ),
+    };
   }
 }

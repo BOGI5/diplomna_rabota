@@ -20,6 +20,11 @@ import { TransferOwnershipDto } from "./dto/transfer-ownership.dto";
 import { AddMemberDto } from "./dto/add-member.dto";
 import { AddStageDto } from "./dto/add-stage.dto";
 import { AddTaskDto } from "./dto/add-task.dto";
+import { UpdateStageDto } from "./dto/update-stage.dto";
+import { UpdateTaskDto } from "./dto/update-task.dto";
+import { UpdateStageOrderDto } from "./dto/update-stage-order.dto";
+import { UpdateTaskOrderDto } from "./dto/update-task-order.dto";
+import { UpdateTaskStageDto } from "./dto/update-task-stage.dto";
 
 @Controller("projects")
 @UseGuards(AccessTokenGuard, ProjectGuard)
@@ -99,11 +104,6 @@ export class ProjectsController {
     return this.projectsService.removeMember(+id, +memberId, req.user.id);
   }
 
-  @Get(":id/stages")
-  findStages(@Param("id") id: string) {
-    return this.projectsService.findStages(+id);
-  }
-
   @Post(":id/stages")
   @Roles("Admin", "Owner")
   addStage(
@@ -114,6 +114,84 @@ export class ProjectsController {
       ...addStageDto,
       projectId: +id,
     });
+  }
+
+  @Get(":id/stages")
+  findStages(@Param("id") id: string) {
+    return this.projectsService.findStages(+id);
+  }
+
+  @Patch(":id/stages/order")
+  @Roles("Admin", "Owner")
+  updateStageOrder(
+    @Param("id") id: string,
+    @Body(ValidationPipe) updateStageOrderDto: UpdateStageOrderDto
+  ) {
+    return this.projectsService.updateStageOrder(+id, updateStageOrderDto);
+  }
+
+  @Patch(":id/stages/:stageId")
+  @Roles("Admin", "Owner")
+  updateStage(
+    @Param("id") id: string,
+    @Param("stageId") stageId: string,
+    @Body(ValidationPipe) updateStageDto: UpdateStageDto
+  ) {
+    return this.projectsService.updateStage(+id, +stageId, updateStageDto);
+  }
+
+  @Delete(":id/stages/:stageId")
+  @Roles("Admin", "Owner")
+  removeStage(@Param("id") id: string, @Param("stageId") stageId: string) {
+    return this.projectsService.removeStage(+id, +stageId);
+  }
+
+  @Patch(":id/stages/:stageId/order")
+  updateTaskOrder(
+    @Param("id") id: string,
+    @Param("stageId") stageId: string,
+    @Body(ValidationPipe) updateTaskOrderDto: UpdateTaskOrderDto
+  ) {
+    return this.projectsService.updateTaskOrder(
+      +id,
+      +stageId,
+      updateTaskOrderDto
+    );
+  }
+
+  @Patch(":id/stages/unstaged/tasks/:taskId")
+  @Roles("Admin", "Owner")
+  stageTask(
+    @Param("id") id: string,
+    @Param("taskId") taskId: string,
+    @Body(ValidationPipe) updateTaskStageDto: UpdateTaskStageDto
+  ) {
+    return this.projectsService.stageTask(
+      +id,
+      +taskId,
+      updateTaskStageDto.destinationStageId
+    );
+  }
+
+  @Patch(":id/stages/:stageId/tasks/:taskId")
+  @Roles("Admin", "Owner")
+  updateTaskStage(
+    @Param("id") id: string,
+    @Param("stageId") stageId: string,
+    @Param("taskId") taskId: string,
+    @Body(ValidationPipe) updateTaskStageDto: UpdateTaskStageDto
+  ) {
+    return this.projectsService.updateTaskStage(
+      +id,
+      +stageId,
+      +taskId,
+      updateTaskStageDto.destinationStageId
+    );
+  }
+
+  @Patch(":id/stages/:stageId/tasks/:taskId/unstage")
+  unstageTask(@Param("id") id: string, @Param("taskId") taskId: string) {
+    return this.projectsService.unstageTask(+id, +taskId);
   }
 
   @Get(":id/tasks")
@@ -131,6 +209,22 @@ export class ProjectsController {
       ...addTaskDto,
       projectId: +id,
     });
+  }
+
+  @Patch(":id/tasks/:taskId")
+  @Roles("Admin", "Owner")
+  updateTask(
+    @Param("id") id: string,
+    @Param("taskId") taskId: string,
+    @Body(ValidationPipe) updateTaskDto: UpdateTaskDto
+  ) {
+    return this.projectsService.updateTask(+id, +taskId, updateTaskDto);
+  }
+
+  @Delete(":id/tasks/:taskId")
+  @Roles("Admin", "Owner")
+  removeTask(@Param("id") id: string, @Param("taskId") taskId: string) {
+    return this.projectsService.removeTask(+id, +taskId);
   }
 
   @Patch(":id")

@@ -13,6 +13,7 @@ export class CreateTaskDto {
 
   @IsInt()
   @IsNotEmpty()
+  @IsOptional()
   stageId: number;
 
   @IsString()

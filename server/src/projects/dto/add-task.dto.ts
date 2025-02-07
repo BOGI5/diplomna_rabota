@@ -9,6 +9,7 @@ import {
 export class AddTaskDto {
   @IsInt()
   @IsNotEmpty()
+  @IsOptional()
   stageId: number;
 
   @IsString()

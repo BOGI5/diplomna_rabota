@@ -3,8 +3,8 @@ import {
   ForbiddenException,
   Injectable,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { MembersService } from "src/members/members.service";
@@ -14,6 +14,9 @@ import { Project } from "./entities/project.entity";
 import { CreateMemberDto } from "src/members/dto/create-member.dto";
 import { CreateStageDto } from "src/stages/dto/create-stage.dto";
 import { CreateTaskDto } from "src/tasks/dto/create-task.dto";
+import { UpdateStageDto } from "./dto/update-stage.dto";
+import { UpdateStageOrderDto } from "./dto/update-stage-order.dto";
+import { UpdateTaskOrderDto } from "./dto/update-task-order.dto";
 
 @Injectable()
 export class ProjectsService {
@@ -27,6 +30,7 @@ export class ProjectsService {
   public async create(createProjectDto: CreateProjectDto, ownerId: number) {
     const project = await this.projectRepository.save({
       ...createProjectDto,
+      stages: [],
     });
     await this.membersService.create({
       userId: ownerId,
@@ -41,21 +45,32 @@ export class ProjectsService {
   }
 
   public async addStage(createStageDto: CreateStageDto) {
-    return this.stagesService.create(createStageDto);
+    const project = await this.projectRepository.findOne({
+      where: { id: createStageDto.projectId },
+    });
+    const stage = await this.stagesService.create(createStageDto);
+    project.stages.push(stage.id);
+    await this.projectRepository.update(project.id, { stages: project.stages });
+    return stage;
   }
 
   public async addTask(createTaskDto: CreateTaskDto) {
-    return this.tasksService.create(createTaskDto);
+    const stage = await this.stagesService.findOne(createTaskDto.stageId);
+    if (stage.projectId !== createTaskDto.projectId) {
+      throw new BadRequestException("Stage is not part of this project");
+    }
+    const task = await this.tasksService.create(createTaskDto);
+    await this.stagesService.addTask(stage.id, task.id);
+    return task;
   }
 
   public async findAll() {
-    let projects = await this.projectRepository.find();
-    projects = await Promise.all(
+    const projects = await this.projectRepository.find();
+    return Promise.all(
       projects.map(async (project) => {
         return await this.formatProject(project);
       })
     );
-    return projects;
   }
 
   public async findOne(id: number) {
@@ -68,7 +83,12 @@ export class ProjectsService {
   }
 
   public async findStages(id: number) {
-    return await this.stagesService.findByProjectId(id);
+    const project = await this.projectRepository.findOne({ where: { id } });
+    return await Promise.all(
+      project.stages.map(async (stageId: number) => {
+        return await this.stagesService.findOne(stageId);
+      })
+    );
   }
 
   public async findTasks(id: number) {
@@ -98,6 +118,115 @@ export class ProjectsService {
     }
     delete updateProjectDto.removeDeadline;
     return this.projectRepository.update(id, updateProjectDto);
+  }
+
+  public async updateStage(
+    projectId: number,
+    stageId: number,
+    updateStageDto: UpdateStageDto
+  ) {
+    const stage = await this.stagesService.findOne(stageId);
+    if (stage.projectId !== projectId) {
+      throw new BadRequestException("Stage is not part of this project");
+    }
+    return this.stagesService.update(stageId, updateStageDto);
+  }
+
+  public async updateStageOrder(
+    projectId: number,
+    updateStageOrderDto: UpdateStageOrderDto
+  ) {
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
+    for (const stageId of updateStageOrderDto.stageOrder) {
+      if (!project.stages.includes(stageId)) {
+        throw new BadRequestException("Stage is not part of this project");
+      }
+    }
+    for (const stageId of project.stages) {
+      if (!updateStageOrderDto.stageOrder.includes(Number(stageId))) {
+        throw new BadRequestException("All stages must be included");
+      }
+    }
+    if (
+      new Set(updateStageOrderDto.stageOrder).size !==
+      updateStageOrderDto.stageOrder.length
+    ) {
+      throw new BadRequestException("Duplicate stages not allowed");
+    }
+    return this.projectRepository.update(projectId, {
+      stages: updateStageOrderDto.stageOrder,
+    });
+  }
+
+  public async updateTaskOrder(
+    projectId: number,
+    stageId: number,
+    updateTaskOrderDto: UpdateTaskOrderDto
+  ) {
+    const stage = await this.stagesService.findOne(stageId);
+    if (stage.projectId !== projectId) {
+      throw new BadRequestException("Stage is not part of this project");
+    }
+    return this.stagesService.updateTaskOrder(stageId, updateTaskOrderDto);
+  }
+
+  public async updateTask(
+    projectId: number,
+    taskId: number,
+    updateTaskDto: any
+  ) {
+    const task = await this.tasksService.findOne(taskId);
+    if (task.projectId !== projectId) {
+      throw new BadRequestException("Task is not part of this project");
+    }
+    return this.tasksService.update(taskId, updateTaskDto);
+  }
+
+  public async updateTaskStage(
+    projectId: number,
+    stageId: number,
+    taskId: number,
+    destinationStageId: number
+  ) {
+    const task = await this.tasksService.findOne(taskId);
+    if (task.projectId !== projectId) {
+      throw new BadRequestException("Task is not part of this project");
+    }
+    const sourceStage = await this.stagesService.findOne(stageId);
+    const destinationStage =
+      await this.stagesService.findOne(destinationStageId);
+    if (sourceStage.projectId !== projectId) {
+      throw new BadRequestException("Source stage is not part of this project");
+    }
+    if (destinationStage.projectId !== projectId) {
+      throw new BadRequestException(
+        "Destination stage is not part of this project"
+      );
+    }
+    await this.stagesService.removeTask(sourceStage.id, taskId);
+    return this.stagesService.addTask(destinationStage.id, taskId);
+  }
+
+  public async stageTask(projectId: number, taskId: number, stageId: number) {
+    const task = await this.tasksService.findOne(taskId);
+    if (task.projectId !== projectId) {
+      throw new BadRequestException("Task is not part of this project");
+    }
+    const stage = await this.stagesService.findOne(stageId);
+    if (stage.projectId !== projectId) {
+      throw new BadRequestException("Stage is not part of this project");
+    }
+    return this.stagesService.addTask(stage.id, taskId);
+  }
+
+  public async unstageTask(projectId: number, taskId: number) {
+    const task = await this.tasksService.findOne(taskId);
+    if (task.projectId !== projectId) {
+      throw new BadRequestException("Task is not part of this project");
+    }
+    return this.stagesService.removeTask(task.stageId, taskId);
   }
 
   public async promoteMember(projectId: number, memberId: number) {
@@ -154,6 +283,33 @@ export class ProjectsService {
     return this.membersService.remove(memberId);
   }
 
+  public async removeStage(projectId: number, stageId: number) {
+    const stage = await this.stagesService.findOne(stageId);
+    if (stage.projectId !== projectId) {
+      throw new BadRequestException("Stage is not part of this project");
+    }
+    if (stage.tasks.length > 0) {
+      throw new BadRequestException(
+        "Stage has tasks. Please remove them first"
+      );
+    }
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
+    project.stages = project.stages.filter((id) => id !== stageId);
+    await this.projectRepository.update(projectId, { stages: project.stages });
+    return this.stagesService.remove(stageId);
+  }
+
+  public async removeTask(projectId: number, taskId: number) {
+    const task = await this.tasksService.findOne(taskId);
+    if (task.projectId !== projectId) {
+      throw new BadRequestException("Task is not part of this project");
+    }
+    await this.stagesService.removeTask(task.stageId, task.id);
+    return this.tasksService.remove(taskId);
+  }
+
   public async remove(id: number) {
     const members = await this.membersService.findByProjectId(id);
     const stages = await this.stagesService.findByProjectId(id);
@@ -171,11 +327,20 @@ export class ProjectsService {
   }
 
   private async formatProject(project: Project) {
+    const stages = await Promise.all(
+      project.stages.map(async (stageId: number) => {
+        return await this.stagesService.findOne(stageId);
+      })
+    );
+    delete project.stages;
     return {
       ...project,
+      stages,
       members: await this.findMembers(project.id),
-      stages: await this.findStages(project.id),
       tasks: await this.findTasks(project.id),
+      unstagedTasks: (await this.findTasks(project.id)).filter((task) => {
+        return task.stageId === null;
+      }),
     };
   }
 }

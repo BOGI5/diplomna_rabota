@@ -1,15 +1,5 @@
-import {
-  Controller,
-  Get,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  ValidationPipe,
-  UseGuards,
-} from "@nestjs/common";
+import { Controller, Get, Param, UseGuards } from "@nestjs/common";
 import { TasksService } from "./tasks.service";
-import { UpdateTaskDto } from "./dto/update-task.dto";
 import { AccessTokenGuard } from "src/auth/guards/accessToken.guard";
 
 @Controller("tasks")
@@ -25,18 +15,5 @@ export class TasksController {
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.tasksService.findOne(+id);
-  }
-
-  @Patch(":id")
-  update(
-    @Param("id") id: string,
-    @Body(ValidationPipe) updateTaskDto: UpdateTaskDto
-  ) {
-    return this.tasksService.update(+id, updateTaskDto);
-  }
-
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.tasksService.remove(+id);
   }
 }

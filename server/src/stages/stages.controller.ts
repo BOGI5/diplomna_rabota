@@ -1,15 +1,5 @@
-import {
-  Controller,
-  Get,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  ValidationPipe,
-  UseGuards,
-} from "@nestjs/common";
+import { Controller, Get, Param, UseGuards } from "@nestjs/common";
 import { StagesService } from "./stages.service";
-import { UpdateStageDto } from "./dto/update-stage.dto";
 import { AccessTokenGuard } from "src/auth/guards/accessToken.guard";
 
 @Controller("stages")
@@ -25,18 +15,5 @@ export class StagesController {
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.stagesService.findOne(+id);
-  }
-
-  @Patch(":id")
-  update(
-    @Param("id") id: string,
-    @Body(ValidationPipe) updateStageDto: UpdateStageDto
-  ) {
-    return this.stagesService.update(+id, updateStageDto);
-  }
-
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.stagesService.remove(+id);
   }
 }
