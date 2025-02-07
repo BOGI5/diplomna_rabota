@@ -4,10 +4,10 @@ import { Avatar } from "primereact/avatar";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { MultiSelect } from "primereact/multiselect";
-import { useProjectContext } from "../contexts/ProjectContext";
-import { useNotificationContext } from "../contexts/NotificationContext";
-import User from "../interfaces/user.interface";
-import ApiService from "../services/api";
+import { useProjectContext } from "../../../contexts/ProjectContext";
+import { useNotificationContext } from "../../../contexts/NotificationContext";
+import User from "../../../interfaces/user.interface";
+import ApiService from "../../../services/api";
 
 export default function AddMembersModal({
   availableUsers,

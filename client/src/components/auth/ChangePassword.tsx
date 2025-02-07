@@ -3,9 +3,9 @@ import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { confirmPopup } from "primereact/confirmpopup";
 import { useState } from "react";
-import ApiService from "../services/api";
-import environment from "../environment";
-import { useNotificationContext } from "../contexts/NotificationContext";
+import ApiService from "../../services/api";
+import environment from "../../environment";
+import { useNotificationContext } from "../../contexts/NotificationContext";
 
 interface ChangePasswordProps {
   visible: boolean;

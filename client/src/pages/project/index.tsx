@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { TabView, TabPanel } from "primereact/tabview";
-import ProjectKanbanBoard from "../../components/ProjectKanbanBoard";
-import ProjectSettings from "../../components/ProjectSettings";
+import KanbanBoard from "../../components/project/kanban";
+import ProjectSettings from "../../components/project/settings";
 import ProjectOverview from "../../components/ProjectOverview";
-import ProjectMembers from "../../components/ProjectMembers";
+import ProjectMembers from "../../components/project/members";
 import ProjectTasks from "../../components/ProjectTasks";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { useProjectContext } from "../../contexts/ProjectContext";
@@ -33,7 +33,7 @@ export default function Project() {
           <ProjectOverview />
         </TabPanel>
         <TabPanel header="Board" leftIcon="pi pi-objects-column mr-2">
-          <ProjectKanbanBoard />
+          <KanbanBoard />
         </TabPanel>
         <TabPanel header="Tasks" leftIcon="pi pi-clipboard mr-2">
           <ProjectTasks />

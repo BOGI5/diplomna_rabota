@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Dialog } from "primereact/dialog";
 import { Avatar } from "primereact/avatar";
 import { Button } from "primereact/button";
-import { useProjectContext } from "../contexts/ProjectContext";
-import Member from "../interfaces/member.interface";
-import ApiService from "../services/api";
+import { useProjectContext } from "../../../contexts/ProjectContext";
+import Member from "../../../interfaces/member.interface";
+import ApiService from "../../../services/api";
 
 export default function EditMemberModal({
   member,

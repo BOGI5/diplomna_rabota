@@ -1,13 +1,13 @@
 import { useState } from "react";
-import ApiService from "../services/api";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { InputText } from "primereact/inputtext";
 import { FloatLabel } from "primereact/floatlabel";
 import { ToggleButton } from "primereact/togglebutton";
 import { InputTextarea } from "primereact/inputtextarea";
-import { useProjectContext } from "../contexts/ProjectContext";
-import { useNotificationContext } from "../contexts/NotificationContext";
+import { useNotificationContext } from "../../../contexts/NotificationContext";
+import { useProjectContext } from "../../../contexts/ProjectContext";
+import ApiService from "../../../services/api";
 
 interface ProjectSettingsProps {
   name: { value: string; error: boolean; edited: boolean };
@@ -40,7 +40,7 @@ export default function ProjectSettings() {
   };
 
   return (
-    <div style={{ height: "calc(100vh - 187px)" }}>
+    <div style={{ height: "calc(100vh - 188px)" }}>
       <div className="flex flex-row justify-content-between">
         {!(smallScreen && edit) && <h1 className="my-0">Settings</h1>}
         <div className="flex flex-row align-items-center gap-3">

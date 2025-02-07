@@ -2,10 +2,10 @@ import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
 import { ToggleButton } from "primereact/togglebutton";
+import LoginForm from "../../components/auth/LoginForm";
 import { useSignState } from "../../contexts/SignFormContext";
-import RegistrationForm from "../../components/RegistrationForm";
+import RegistrationForm from "../../components/auth/RegistrationForm";
 import { useNotificationContext } from "../../contexts/NotificationContext";
-import LoginForm from "../../components/LoginForm";
 
 export default function Auth() {
   const {

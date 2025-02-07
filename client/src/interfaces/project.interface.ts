@@ -10,4 +10,5 @@ export default interface Project {
   members: Member[];
   stages: Stage[];
   tasks: Task[];
+  unstagedTasks: Task[];
 }

@@ -8,7 +8,7 @@ import { ToggleButton } from "primereact/togglebutton";
 import { confirmPopup, ConfirmPopup } from "primereact/confirmpopup";
 import { useNotificationContext } from "../../contexts/NotificationContext";
 import { useAuthContext } from "../../contexts/AuthContext";
-import ChangePassword from "../../components/ChangePassword";
+import ChangePassword from "../../components/auth/ChangePassword";
 import ApiService from "../../services/api";
 import environment from "../../environment";
 import { useEffect, useState } from "react";

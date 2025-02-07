@@ -2,14 +2,14 @@ import { useState } from "react";
 import { Tag } from "primereact/tag";
 import { Button } from "primereact/button";
 import { Avatar } from "primereact/avatar";
-import { useProjectContext } from "../contexts/ProjectContext";
+import { useProjectContext } from "../../../contexts/ProjectContext";
 import AddMembersModal from "./AddMembersModal";
 import EditMemberModal from "./EditMemberModal";
-import Member from "../interfaces/member.interface";
-import User from "../interfaces/user.interface";
-import ApiService from "../services/api";
-import environment from "../environment";
-import Listing from "./Listing";
+import Member from "../../../interfaces/member.interface";
+import User from "../../../interfaces/user.interface";
+import ApiService from "../../../services/api";
+import environment from "../../../environment";
+import Listing from "../../Listing";
 
 export default function ProjectMembers() {
   const apiService = new ApiService();
