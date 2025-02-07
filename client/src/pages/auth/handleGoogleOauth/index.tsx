@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuthState } from "../../../contexts/AuthContext";
+import { useAuthContext } from "../../../contexts/AuthContext";
 
 const HandleGoogleOauth = () => {
   const [params] = useSearchParams();
-  const { setUser } = useAuthState();
+  const { setUser } = useAuthContext();
   const navigate = useNavigate();
 
   useEffect(() => {

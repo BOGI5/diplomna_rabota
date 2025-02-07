@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   ValidationPipe,
 } from "@nestjs/common";
@@ -9,12 +11,15 @@ import { CreateGoogleUserDto } from "./dto/create-google-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
 import { CreateUserDto } from "./dto/create-user.dto";
+import { MembersService } from "src/members/members.service";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>
+    private userRepository: Repository<User>,
+    @Inject(forwardRef(() => MembersService))
+    private membersService: MembersService
   ) {}
 
   public async createGoogleUser(
@@ -81,7 +86,11 @@ export class UsersService {
     return this.findOne(id);
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    const members = await this.membersService.findByUserId(id);
+    for (const member of members) {
+      await this.membersService.remove(member.id);
+    }
     return this.userRepository.delete(id);
   }
 }

@@ -6,7 +6,12 @@ import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { User } from "./users/entities/user.entity";
-import { ProjectModule } from "./project/project.module";
+import { ProjectsModule } from "./projects/projects.module";
+import { MembersModule } from "./members/members.module";
+import { StagesModule } from "./stages/stages.module";
+import { AssignmentsModule } from "./assignments/assignments.module";
+import { TasksModule } from "./tasks/tasks.module";
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -26,7 +31,12 @@ import { ProjectModule } from "./project/project.module";
       autoLoadEntities: true,
       entities: [User],
     }),
-    ProjectModule,
+    ProjectsModule,
+    MembersModule,
+    StagesModule,
+    TasksModule,
+    AssignmentsModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

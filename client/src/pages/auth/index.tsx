@@ -2,10 +2,10 @@ import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
 import { ToggleButton } from "primereact/togglebutton";
+import LoginForm from "../../components/auth/LoginForm";
 import { useSignState } from "../../contexts/SignFormContext";
-import RegistrationForm from "../../components/RegistrationForm";
-import { useNotification } from "../../contexts/NotificationContext";
-import LoginForm from "../../components/LoginForm";
+import RegistrationForm from "../../components/auth/RegistrationForm";
+import { useNotificationContext } from "../../contexts/NotificationContext";
 
 export default function Auth() {
   const {
@@ -18,7 +18,7 @@ export default function Auth() {
     smallScreen,
     onGoogleSignIn,
   } = useSignState();
-  const { showMessage, clear } = useNotification();
+  const { showMessage, clear } = useNotificationContext();
 
   return (
     <Dialog

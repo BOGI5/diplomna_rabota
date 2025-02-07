@@ -34,7 +34,7 @@ export default class ApiService {
 
   public async post(
     url: string,
-    data: { [key: string]: unknown }
+    data?: { [key: string]: unknown }
   ): Promise<AxiosResponse> {
     return await axios
       .post(`${this.baseUrl}${url}`, data, this.requestSettings)
@@ -54,7 +54,7 @@ export default class ApiService {
 
   public async patch(
     url: string,
-    data: { [key: string]: unknown }
+    data?: { [key: string]: unknown }
   ): Promise<AxiosResponse> {
     return await axios
       .patch(`${this.baseUrl}${url}`, data, this.requestSettings)

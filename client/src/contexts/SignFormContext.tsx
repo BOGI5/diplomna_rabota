@@ -8,9 +8,9 @@ import {
 } from "react";
 import environment from "../environment";
 import { ToastMessage } from "primereact/toast";
-import { useAuthState } from "./AuthContext";
+import { useAuthContext } from "./AuthContext";
 
-export interface SignStateDef {
+export interface SignStateType {
   visible: boolean;
   setVisible: (visible: boolean) => void;
   smallScreen: boolean;
@@ -39,7 +39,7 @@ export interface SignStateDef {
 }
 
 export interface SignContextDef {
-  sign: SignStateDef;
+  sign: SignStateType;
 }
 
 const SignFormContext = createContext<SignContextDef | undefined>(undefined);
@@ -57,7 +57,7 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
     lastName: { value: "", error: false },
   });
 
-  const { setUser } = useAuthState();
+  const { setUser } = useAuthContext();
 
   onresize = () => {
     if (window.innerWidth < 600) {
@@ -201,7 +201,7 @@ export const SignFormProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useSignState = (): SignStateDef => {
+export const useSignState = (): SignStateType => {
   const context = useContext(SignFormContext);
   if (context === undefined) {
     throw new Error("useSignState must be used within a SignFormProvider");

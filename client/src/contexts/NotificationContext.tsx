@@ -31,7 +31,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useNotification = (): NotificationContextType => {
+export const useNotificationContext = (): NotificationContextType => {
   const context = useContext(NotificationContext);
   if (!context) {
     throw new Error(
