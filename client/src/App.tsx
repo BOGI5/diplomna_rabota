@@ -7,6 +7,7 @@ import HandleJWT from "./pages/auth/handleGoogleOauth";
 import Profile from "./pages/profile";
 import Auth from "./pages/auth";
 import Home from "./pages/home";
+import Tasks from "./pages/tasks";
 import Project from "./pages/project";
 import Projects from "./pages/projects";
 import Header from "./components/Header";
@@ -40,6 +41,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path={environment.clientProfileUrl} element={<Profile />} />
         <Route path={environment.clientProjectsUrl} element={<Projects />} />
+        <Route path={environment.clientTasksUrl} element={<Tasks />} />
         <Route
           path={"/projects/:id"}
           element={

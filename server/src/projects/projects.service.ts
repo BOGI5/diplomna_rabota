@@ -17,11 +17,13 @@ import { CreateTaskDto } from "src/tasks/dto/create-task.dto";
 import { UpdateStageDto } from "./dto/update-stage.dto";
 import { UpdateStageOrderDto } from "./dto/update-stage-order.dto";
 import { UpdateTaskOrderDto } from "./dto/update-task-order.dto";
+import { AssignmentsService } from "src/assignments/assignments.service";
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @InjectRepository(Project) private projectRepository: Repository<Project>,
+    private assignmentsService: AssignmentsService,
     private membersService: MembersService,
     private stagesService: StagesService,
     private tasksService: TasksService
@@ -62,6 +64,40 @@ export class ProjectsService {
     const task = await this.tasksService.create(createTaskDto);
     await this.stagesService.addTask(stage.id, task.id);
     return task;
+  }
+
+  public async assignTask(projectId: number, taskId: number, userId: number) {
+    const task = await this.tasksService.findOne(taskId);
+    const member = await this.membersService.findMember(userId, projectId);
+    if (!member) {
+      throw new ForbiddenException("User is not part of this project");
+    }
+    if (task.projectId !== projectId) {
+      throw new BadRequestException("Task is not part of this project");
+    }
+    if (await this.assignmentsService.findAssignment(member.id, taskId)) {
+      throw new BadRequestException("Task is already assigned to this user");
+    }
+    return this.assignmentsService.create({ taskId, memberId: member.id });
+  }
+
+  public async unassignTask(projectId: number, taskId: number, userId: number) {
+    const task = await this.tasksService.findOne(taskId);
+    const member = await this.membersService.findMember(userId, projectId);
+    if (!member) {
+      throw new ForbiddenException("User is not part of this project");
+    }
+    if (task.projectId !== projectId) {
+      throw new BadRequestException("Task is not part of this project");
+    }
+    const assignment = await this.assignmentsService.findAssignment(
+      member.id,
+      taskId
+    );
+    if (!assignment) {
+      throw new BadRequestException("Task is not assigned to this user");
+    }
+    return this.assignmentsService.remove(assignment.id);
   }
 
   public async findAll() {

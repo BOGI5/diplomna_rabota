@@ -38,21 +38,28 @@ export default function TaskCard(task: Task) {
       {...listeners}
     >
       <div
-        style={{ height: "40px", width: "185px" }}
-        className="flex flex-row mx-2 justify-content-between align-items-center"
+        style={{ minHeight: "60px" }}
+        className="flex flex-row w-full justify-content-between align-items-center"
       >
         {!isDragging && (
-          <>
-            <h2 className="m-0">{task.name}</h2>
-            <Button
-              text
-              severity="secondary"
-              rounded
-              icon="pi pi-info-circle"
-              onClick={() => setVisible(true)}
-            />
+          <div className="flex flex-column gap-1 w-full">
+            <div className="flex flex-row align-items-center justify-content-between">
+              <h2 className="m-0">{task.name}</h2>
+              <Button
+                text
+                severity="secondary"
+                rounded
+                icon="pi pi-info-circle"
+                onClick={() => setVisible(true)}
+                className="m-0 p-0"
+                size="small"
+              />
+            </div>
+            <small className="m-0">
+              {task.description || "No description provided"}
+            </small>
             <EditTask task={task} visible={visible} setVisible={setVisible} />
-          </>
+          </div>
         )}
       </div>
     </div>

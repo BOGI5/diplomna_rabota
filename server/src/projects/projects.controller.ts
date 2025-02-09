@@ -227,6 +227,24 @@ export class ProjectsController {
     return this.projectsService.removeTask(+id, +taskId);
   }
 
+  @Post(":id/tasks/:taskId/assign")
+  assignTask(
+    @Param("id") id: string,
+    @Param("taskId") taskId: string,
+    @Req() req
+  ) {
+    return this.projectsService.assignTask(+id, +taskId, req.user.id);
+  }
+
+  @Delete(":id/tasks/:taskId/unassign")
+  unassignTask(
+    @Param("id") id: string,
+    @Param("taskId") taskId: string,
+    @Req() req
+  ) {
+    return this.projectsService.unassignTask(+id, +taskId, req.user.id);
+  }
+
   @Patch(":id")
   @Roles("Owner")
   update(

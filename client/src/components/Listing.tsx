@@ -7,7 +7,7 @@ export default function Listing<T>({
   width,
   height,
 }: {
-  header: JSX.Element | undefined;
+  header?: JSX.Element;
   itemTemplate: (item: T) => JSX.Element;
   items: T[];
   width?: string;

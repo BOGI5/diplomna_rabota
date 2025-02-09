@@ -20,6 +20,7 @@ const environment = {
   clientOauthUrl: "/auth/handle-google-oauth",
   clientProfileUrl: "/profile",
   clientProjectsUrl: "/projects",
+  clientTasksUrl: "/tasks",
 };
 
 export default environment;

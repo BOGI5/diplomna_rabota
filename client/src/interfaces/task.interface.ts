@@ -1,3 +1,5 @@
+import Member from "./member.interface";
+
 export default interface Task {
   id: number;
   stageId: number;
@@ -5,4 +7,5 @@ export default interface Task {
   name: string;
   description?: string;
   deadline?: Date;
+  assignedMembers: Member[];
 }

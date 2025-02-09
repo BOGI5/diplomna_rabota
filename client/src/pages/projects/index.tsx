@@ -1,30 +1,25 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import ProjectCard from "../../components/ProjectCard";
 import ApiService from "../../services/api";
-
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-}
+import Project from "../../interfaces/project.interface";
+import Listing from "../../components/Listing";
 
 export default function Projects() {
   const apiService = new ApiService();
-  const [cards, setCards] = useState<React.ReactNode[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     apiService.get("/me/projects").then((res) => {
-      const projectCards = res.data.map((project: Project) => (
-        <ProjectCard
-          key={project.id}
-          id={project.id}
-          name={project.name}
-          description={project.description}
-        />
-      ));
-      setCards(projectCards);
+      setProjects(res.data);
     });
   }, []);
 
-  return <div className="mt-2 flex flex-column gap-2">{cards}</div>;
+  return (
+    <Listing
+      itemTemplate={ProjectCard}
+      items={projects.map((project) => ({ project }))}
+      width="100%"
+      height="calc(100vh - 100px)"
+    />
+  );
 }

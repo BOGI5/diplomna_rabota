@@ -32,7 +32,7 @@ export default function ProjectMembers() {
   const header = (
     <div className="flex flex-column gap-3">
       <div className="flex flex-row justify-content-between align-items-center">
-        <h1>Members</h1>
+        <h1>Members: {project?.members.length}</h1>
         {permissions > 0 && (
           <>
             <AddMembersModal

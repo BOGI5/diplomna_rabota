@@ -31,6 +31,12 @@ export class AssignmentsService {
     return this.assignmentRepository.find({ where: { memberId } });
   }
 
+  public findAssignment(memberId: number, taskId: number) {
+    return this.assignmentRepository.findOne({
+      where: { memberId, taskId },
+    });
+  }
+
   public remove(id: number) {
     return this.assignmentRepository.delete(id);
   }

@@ -8,6 +8,7 @@ import { FloatLabel } from "primereact/floatlabel";
 import { InputText } from "primereact/inputtext";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useState } from "react";
+import { Calendar } from "primereact/calendar";
 
 export default function EditTask({
   task,
@@ -18,11 +19,14 @@ export default function EditTask({
   visible: boolean;
   setVisible: (visible: boolean) => void;
 }) {
-  const { updateProjectData, permissions } = useProjectContext();
+  const { updateProjectData, permissions, currentMember } = useProjectContext();
   const apiService = new ApiService();
   const [edit, setEdit] = useState(false);
   const [name, setName] = useState(task.name);
   const [description, setDescription] = useState(task.description);
+
+  let taskAssigned =
+    currentMember && task.assignedMembers.includes(currentMember);
 
   return (
     <Dialog
@@ -62,12 +66,38 @@ export default function EditTask({
             Task description <i>(optional)</i>
           </label>
         </FloatLabel>
+        <FloatLabel className="w-full">
+          <label htmlFor="deadline">
+            Deadline <i>(optional)</i>
+          </label>
+
+          <Calendar id="deadline" className="w-full" disabled={!edit} />
+        </FloatLabel>
         <div className="flex flex-column gap-2">
           <Button
             text
-            label="Assign task"
+            label={taskAssigned ? "Unassign task" : "Assign task"}
             icon="pi pi-clipboard"
             severity="info"
+            onClick={async () => {
+              if (taskAssigned) {
+                await apiService
+                  .delete(
+                    `/projects/${task.projectId}/tasks/${task.id}/unassign`
+                  )
+                  .then(() => {
+                    updateProjectData();
+                    taskAssigned = false;
+                  });
+              } else {
+                await apiService
+                  .post(`/projects/${task.projectId}/tasks/${task.id}/assign`)
+                  .then(() => {
+                    updateProjectData();
+                    taskAssigned = true;
+                  });
+              }
+            }}
           />
           {permissions > 0 && (
             <ButtonGroup>

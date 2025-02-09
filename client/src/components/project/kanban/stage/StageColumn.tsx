@@ -73,6 +73,7 @@ export default function StageColumn(stage: Stage) {
             </div>
 
             <div className="flex flex-column gap-3">
+              <p className="m-0">Tasks: {stage.tasks.length}</p>
               <div className="flex flex-column gap-3">
                 <SortableContext items={stage.tasks.map((task) => task.id)}>
                   {stage.tasks.map((task) => {

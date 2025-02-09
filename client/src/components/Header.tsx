@@ -34,14 +34,9 @@ export default function Header() {
         {
           label: "My Tasks",
           icon: "pi pi-clipboard",
-        },
-        {
-          label: "Stats",
-          icon: "pi pi-chart-bar",
-        },
-        {
-          label: "About us",
-          icon: "pi pi-users",
+          command: () => {
+            window.location.href = `${environment.clientUrl}${environment.clientTasksUrl}`;
+          },
         },
       ]}
       end={
@@ -78,13 +73,6 @@ export default function Header() {
                 icon: "pi pi-user",
                 command: () => {
                   window.location.href = `${environment.clientUrl}${environment.clientProfileUrl}`;
-                },
-              },
-              {
-                label: "Settings",
-                icon: "pi pi-cog",
-                command: () => {
-                  window.location.href = `${environment.clientUrl}/settings`;
                 },
               },
             ]}

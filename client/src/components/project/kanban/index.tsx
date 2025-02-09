@@ -31,184 +31,203 @@ export default function KanbanBoard() {
   );
 
   return (
-    <div
-      className="flex flex-column gap-5 justify-content-between"
-      style={{ height: "calc(100vh - 188px)" }}
-    >
-      <DndContext
-        sensors={sensors}
-        onDragStart={(event: DragStartEvent) => {
-          if (event.active.data.current?.type === "stage") {
-            setActiveStage(event.active.data.current.stage);
-            console.log(event);
-            return;
-          }
-          if (event.active.data.current?.type === "task") {
-            setActiveTask(event.active.data.current.task);
-            console.log(event);
-            return;
-          }
-        }}
-        onDragOver={async (event: DragOverEvent) => {
-          const { active, over } = event;
-
-          if (active.id === over?.id) return;
-
-          const isActiveTask = active.data.current?.type === "task";
-          const isOverTask = over?.data.current?.type === "task";
-
-          if (!isActiveTask) return;
-
-          // task over task
-          if (isActiveTask && isOverTask && project) {
-            const activeStage = project.stages.findIndex(
-              (stage) => stage.id === active.data.current?.task.stageId
-            );
-            const overStage = project.stages.findIndex(
-              (stage) => stage.id === over?.data.current?.task.stageId
-            );
-            let activeIndex = project.stages[activeStage].tasks.findIndex(
-              (task) => task.id === active.data.current?.task.id
-            );
-            const overIndex = project.stages[overStage].tasks.findIndex(
-              (task) => task.id === over?.data.current?.task.id
-            );
-
-            console.log(activeStage, overStage, activeIndex, overIndex);
-            // change stage
-            if (activeStage !== overStage) {
-              const task = project.stages[activeStage].tasks[activeIndex];
-              const destStage = project.stages[overStage];
-              if (task) {
-                await apiService.patch(
-                  `/projects/${project.id}/stages/${
-                    task.stageId || "unstaged"
-                  }/tasks/${task.id}`,
-                  {
-                    destinationStageId: destStage.id,
-                  }
-                );
-                task.stageId = destStage.id;
-                project.stages[activeStage].tasks.splice(activeIndex, 1);
-                project.stages[overStage].tasks.push(task);
-                activeIndex = project.stages[overStage].tasks.length - 1;
-              }
+    <>
+      <div className="flex flex-row justify-content-between align-items-center mb-2 border-bottom-1 pb-2">
+        <div className="flex flex-row gap-4">
+          <h1 className="m-0">{project?.name}</h1>
+          <small
+            className="align-self-end"
+            style={{ maxWidth: "200px", maxHeight: "50px" }}
+          >
+            {project?.description}
+          </small>
+        </div>
+        <div className="flex flex-row gap-4">
+          <h2 className="m-0">Stages: {project?.stages.length}</h2>
+          <h2 className="m-0">Tasks: {project?.tasks.length}</h2>
+        </div>
+      </div>
+      <div
+        className="flex flex-column gap-5 justify-content-between"
+        style={{ height: "calc(100vh - 260px)" }}
+      >
+        <DndContext
+          sensors={sensors}
+          onDragStart={(event: DragStartEvent) => {
+            if (event.active.data.current?.type === "stage") {
+              setActiveStage(event.active.data.current.stage);
+              console.log(event);
+              return;
             }
+            if (event.active.data.current?.type === "task") {
+              setActiveTask(event.active.data.current.task);
+              console.log(event);
+              return;
+            }
+          }}
+          onDragOver={async (event: DragOverEvent) => {
+            const { active, over } = event;
 
-            if (activeIndex !== -1 && overIndex !== -1) {
-              project.stages[overStage].tasks = arrayMove(
-                project.stages[overStage].tasks,
-                activeIndex,
-                overIndex
+            if (active.id === over?.id) return;
+
+            const isActiveTask = active.data.current?.type === "task";
+            const isOverTask = over?.data.current?.type === "task";
+
+            if (!isActiveTask) return;
+
+            // task over task
+            if (isActiveTask && isOverTask && project) {
+              const activeStage = project.stages.findIndex(
+                (stage) => stage.id === active.data.current?.task.stageId
               );
-              await apiService.patch(
-                `/projects/${project.id}/stages/${project.stages[overStage].id}/order`,
-                {
-                  taskOrder: project.stages[overStage].tasks.map(
-                    (task) => task.id
-                  ),
+              const overStage = project.stages.findIndex(
+                (stage) => stage.id === over?.data.current?.task.stageId
+              );
+              let activeIndex = project.stages[activeStage].tasks.findIndex(
+                (task) => task.id === active.data.current?.task.id
+              );
+              const overIndex = project.stages[overStage].tasks.findIndex(
+                (task) => task.id === over?.data.current?.task.id
+              );
+
+              console.log(activeStage, overStage, activeIndex, overIndex);
+              // change stage
+              if (activeStage !== overStage) {
+                const task = project.stages[activeStage].tasks[activeIndex];
+                const destStage = project.stages[overStage];
+                if (task) {
+                  await apiService.patch(
+                    `/projects/${project.id}/stages/${
+                      task.stageId || "unstaged"
+                    }/tasks/${task.id}`,
+                    {
+                      destinationStageId: destStage.id,
+                    }
+                  );
+                  task.stageId = destStage.id;
+                  project.stages[activeStage].tasks.splice(activeIndex, 1);
+                  project.stages[overStage].tasks.push(task);
+                  activeIndex = project.stages[overStage].tasks.length - 1;
                 }
-              );
-              updateProjectData();
-            }
-          }
-
-          // task over stage
-          const isOverStage = over?.data.current?.type === "stage";
-          if (isActiveTask && isOverStage && project) {
-            await apiService.patch(
-              `/projects/${project.id}/stages/${
-                active.data.current?.task.stageId || "unstaged"
-              }/tasks/${active.data.current?.task.id}`,
-              {
-                destinationStageId: over?.data.current?.stage.id,
               }
-            );
-            updateProjectData();
-          }
 
-          // task over unstaged
-          if (
-            isActiveTask &&
-            project &&
-            project.stages.findIndex(
-              (stage) => stage.id === over?.data.current?.task.stageId
-            ) === -1
-          ) {
-            const task = project.stages
-              .find((stage) => stage.id === active.data.current?.task.stageId)
-              ?.tasks.find((task) => task.id === active.data.current?.task.id);
-            if (task) {
-              await apiService.patch(
-                `/projects/${project.id}/stages/${task.stageId}/tasks/${task.id}/unstage`
-              );
-              updateProjectData();
-            }
-          }
-        }}
-        onDragEnd={async (event: DragEndEvent) => {
-          if (activeStage) {
-            setActiveStage(null);
-            if (event.over?.id && event.active.id && project?.stages) {
-              const activeIndex = project.stages.findIndex(
-                (stage) => stage.id === event.active.data.current?.stage.id
-              );
-              const overIndex = project.stages.findIndex(
-                (stage) => stage.id === event.over?.data.current?.stage.id
-              );
               if (activeIndex !== -1 && overIndex !== -1) {
-                project.stages = arrayMove(
-                  project.stages,
+                project.stages[overStage].tasks = arrayMove(
+                  project.stages[overStage].tasks,
                   activeIndex,
                   overIndex
                 );
                 await apiService.patch(
-                  `/projects/${project?.id}/stages/order`,
+                  `/projects/${project.id}/stages/${project.stages[overStage].id}/order`,
                   {
-                    stageOrder: project.stages.map((stage) => stage.id),
+                    taskOrder: project.stages[overStage].tasks.map(
+                      (task) => task.id
+                    ),
                   }
                 );
                 updateProjectData();
               }
             }
-          } else if (activeTask) {
-            setActiveTask(null);
-          }
-        }}
-      >
-        <div
-          style={{ height: "70%" }}
-          className="flex flex-row gap-5 align-items-start justify-content-start"
+
+            // task over stage
+            const isOverStage = over?.data.current?.type === "stage";
+            if (isActiveTask && isOverStage && project) {
+              await apiService.patch(
+                `/projects/${project.id}/stages/${
+                  active.data.current?.task.stageId || "unstaged"
+                }/tasks/${active.data.current?.task.id}`,
+                {
+                  destinationStageId: over?.data.current?.stage.id,
+                }
+              );
+              updateProjectData();
+            }
+
+            // task over unstaged
+            if (
+              isActiveTask &&
+              project &&
+              project.stages.findIndex(
+                (stage) => stage.id === over?.data.current?.task.stageId
+              ) === -1
+            ) {
+              const task = project.stages
+                .find((stage) => stage.id === active.data.current?.task.stageId)
+                ?.tasks.find(
+                  (task) => task.id === active.data.current?.task.id
+                );
+              if (task) {
+                await apiService.patch(
+                  `/projects/${project.id}/stages/${task.stageId}/tasks/${task.id}/unstage`
+                );
+                updateProjectData();
+              }
+            }
+          }}
+          onDragEnd={async (event: DragEndEvent) => {
+            if (activeStage) {
+              setActiveStage(null);
+              if (event.over?.id && event.active.id && project?.stages) {
+                const activeIndex = project.stages.findIndex(
+                  (stage) => stage.id === event.active.data.current?.stage.id
+                );
+                const overIndex = project.stages.findIndex(
+                  (stage) => stage.id === event.over?.data.current?.stage.id
+                );
+                if (activeIndex !== -1 && overIndex !== -1) {
+                  project.stages = arrayMove(
+                    project.stages,
+                    activeIndex,
+                    overIndex
+                  );
+                  await apiService.patch(
+                    `/projects/${project?.id}/stages/order`,
+                    {
+                      stageOrder: project.stages.map((stage) => stage.id),
+                    }
+                  );
+                  updateProjectData();
+                }
+              }
+            } else if (activeTask) {
+              setActiveTask(null);
+            }
+          }}
         >
-          <SortableContext
-            items={project?.stages.map((stage) => stage.id) || []}
+          <div
+            style={{ height: "70%" }}
+            className="flex flex-row gap-5 align-items-start justify-content-start"
           >
-            {project?.stages.map((stage) => (
-              <StageColumn key={stage.id} {...stage} />
-            ))}
-          </SortableContext>
-          {permissions > 0 && <AddStage />}
-          {createPortal(
-            <DragOverlay>
-              {activeStage && <StageColumn {...activeStage} />}
-              {activeTask && <TaskCard {...activeTask} />}
-            </DragOverlay>,
-            document.body
-          )}
-        </div>
-        <div
-          style={{ height: "30%" }}
-          className="flex flex-row gap-5 align-items-center justify-content-start border-3 border-round border-0 p-3"
-        >
-          <div className="flex flex-column gap-3 border-right-2 pr-4 pl-2 align-items-center">
-            <h2 className="my-0">Unstaged</h2>
-            {permissions > 0 && <AddTask stageId={undefined} />}
+            <SortableContext
+              items={project?.stages.map((stage) => stage.id) || []}
+            >
+              {project?.stages.map((stage) => (
+                <StageColumn key={stage.id} {...stage} />
+              ))}
+            </SortableContext>
+            {permissions > 0 && <AddStage />}
+            {createPortal(
+              <DragOverlay>
+                {activeStage && <StageColumn {...activeStage} />}
+                {activeTask && <TaskCard {...activeTask} />}
+              </DragOverlay>,
+              document.body
+            )}
           </div>
-          {project?.unstagedTasks.map((task) => (
-            <TaskCard key={task.id} {...task} />
-          ))}
-        </div>
-      </DndContext>
-    </div>
+          <div
+            style={{ height: "20%" }}
+            className="flex flex-row gap-5 align-items-center justify-content-start border-3 border-round border-0 p-3"
+          >
+            <div className="flex flex-column gap-3 border-right-2 pr-4 pl-2 align-items-center">
+              <h2 className="my-0">Unstaged</h2>
+              {permissions > 0 && <AddTask stageId={undefined} />}
+            </div>
+            {project?.unstagedTasks.map((task) => (
+              <TaskCard key={task.id} {...task} />
+            ))}
+          </div>
+        </DndContext>
+      </div>
+    </>
   );
 }

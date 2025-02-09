@@ -1,61 +1,30 @@
-import { Button } from "primereact/button";
 import { Card } from "primereact/card";
-import { useEffect, useState } from "react";
-import ApiService from "../services/api";
+import Project from "../interfaces/project.interface";
+import { Button } from "primereact/button";
 
-interface ProjectData {
-  id: string;
-  name: string;
-  description?: string;
-  members?: number;
-}
-
-export default function ProjectCard({ id, name, description }: ProjectData) {
-  const apiService = new ApiService();
-  const [projectData, setProjectData] = useState<ProjectData>({
-    id: id,
-    name: name,
-    description: description,
-    members: 0,
-  });
-
-  useEffect(() => {
-    (async () => {
-      const res = await apiService.get(`/projects/${id}`);
-      setProjectData({ ...res.data, members: res.data.members.length });
-    })();
-  }, [id]);
-
+export default function ProjectCard({ project }: { project: Project }) {
   return (
     <>
       <Card
-        onClick={() => (window.location.href = `/projects/${id}`)}
-        className="border-solid border-2 border-0"
+        className="border-solid border-2 border-0 my-2"
         header={
-          <div className="flex flex-row justify-content-between m-4 mb-0">
+          <div className="flex flex-row justify-content-between align-items-center m-4 mb-0">
             <div>
-              <h2>{projectData.name}</h2>
-              <label>
-                {projectData.description || "No description provided"}
-              </label>
+              <h2>{project.name}</h2>
+              <label>{project.description || "No description provided"}</label>
             </div>
-            <p className="align-self-center">Members: {projectData.members}</p>
             <div className="flex flex-column gap-2">
-              <Button
-                label="Settings"
-                icon="pi pi-cog"
-                size="small"
-                severity="secondary"
-                outlined
-              />
-              <Button
-                label="Delete"
-                icon="pi pi-trash"
-                severity="danger"
-                size="small"
-                outlined
-              />
+              <p className="m-0">Members: {project.members.length}</p>
+              <p className="m-0">Stages: {project.stages.length}</p>
+              <p className="m-0">Tasks: {project.tasks.length}</p>
             </div>
+            <Button
+              onClick={() => (window.location.href = `/projects/${project.id}`)}
+              label="Open"
+              severity="info"
+              icon="pi pi-folder-open"
+              text
+            />
           </div>
         }
       />
