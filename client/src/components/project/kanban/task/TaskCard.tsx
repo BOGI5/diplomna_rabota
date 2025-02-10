@@ -38,7 +38,7 @@ export default function TaskCard(task: Task) {
       {...listeners}
     >
       <div
-        style={{ minHeight: "60px" }}
+        style={{ minHeight: "60px", minWidth: "160px" }}
         className="flex flex-row w-full justify-content-between align-items-center"
       >
         {!isDragging && (
