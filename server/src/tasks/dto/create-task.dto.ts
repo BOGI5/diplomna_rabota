@@ -1,22 +1,22 @@
 import {
   IsDate,
-  IsInt,
   IsNotEmpty,
   IsObject,
   IsOptional,
   IsString,
 } from "class-validator";
 import { Project } from "src/projects/entities/project.entity";
+import { Stage } from "src/stages/entities/stage.entity";
 
 export class CreateTaskDto {
   @IsObject()
   @IsNotEmpty()
   project: Project;
 
-  @IsInt()
+  @IsObject()
   @IsNotEmpty()
   @IsOptional()
-  stageId: number;
+  stage: Stage;
 
   @IsString()
   @IsNotEmpty()

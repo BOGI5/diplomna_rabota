@@ -25,11 +25,11 @@ export class TasksService {
   ) {}
 
   public async create(createTaskDto: CreateTaskDto) {
-    if (createTaskDto.stageId) {
-      const stage = await this.stagesService.findOne(createTaskDto.stageId);
-      if (stage.project.id !== createTaskDto.project.id) {
-        throw new BadRequestException("Stage does not belong to this project");
-      }
+    if (
+      createTaskDto.stage &&
+      createTaskDto.stage.project.id !== createTaskDto.project.id
+    ) {
+      throw new BadRequestException("Stage does not belong to this project");
     }
     return this.taskRepository.save(createTaskDto);
   }

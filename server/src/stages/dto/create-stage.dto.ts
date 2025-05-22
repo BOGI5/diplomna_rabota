@@ -1,9 +1,10 @@
-import { IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsObject, IsString } from "class-validator";
+import { Project } from "src/projects/entities/project.entity";
 
 export class CreateStageDto {
-  @IsInt()
+  @IsObject()
   @IsNotEmpty()
-  projectId: number;
+  project: Project;
 
   @IsString()
   @IsNotEmpty()

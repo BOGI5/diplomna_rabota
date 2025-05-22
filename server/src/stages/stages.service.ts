@@ -11,6 +11,7 @@ import { Stage } from "./entities/stage.entity";
 import { Repository } from "typeorm";
 import { TasksService } from "src/tasks/tasks.service";
 import { UpdateTaskOrderDto } from "./dto/update-task-order.dto";
+import { Task } from "src/tasks/entities/task.entity";
 
 @Injectable()
 export class StagesService {
@@ -20,16 +21,15 @@ export class StagesService {
   ) {}
 
   public create(createStageDto: CreateStageDto) {
-    return this.stageRepository.save({ ...createStageDto, tasks: [] });
+    return this.stageRepository.save({ ...createStageDto, tasksOrder: [] });
   }
 
-  public async addTask(stageId: number, taskId: number) {
-    const stage = await this.stageRepository.findOne({
-      where: { id: stageId },
+  public async addTask(stage: Stage, task: Task) {
+    stage.tasksOrder.push(task.id);
+    await this.tasksService.update(task.id, { stage });
+    return this.stageRepository.update(stage.id, {
+      tasksOrder: stage.tasksOrder,
     });
-    stage.tasks.push(taskId);
-    await this.tasksService.update(taskId, { stageId });
-    return this.stageRepository.update(stage.id, { tasks: stage.tasks });
   }
 
   public async findAll() {
@@ -48,7 +48,9 @@ export class StagesService {
   }
 
   public async findByProjectId(projectId: number) {
-    const stages = await this.stageRepository.find({ where: { projectId } });
+    const stages = await this.stageRepository.find({
+      where: { project: { id: projectId } },
+    });
     return await Promise.all(
       stages.map(async (stage) => {
         return await this.formatStage(stage);
@@ -57,7 +59,7 @@ export class StagesService {
   }
 
   public update(id: number, updateStageDto: UpdateStageDto) {
-    delete updateStageDto.projectId;
+    delete updateStageDto.project;
     if (Object.keys(updateStageDto).length === 0) {
       throw new BadRequestException("Empty update data");
     }
@@ -65,16 +67,20 @@ export class StagesService {
   }
 
   public async updateTaskOrder(
-    id: number,
+    stage: Stage,
     updateTaskOrderDto: UpdateTaskOrderDto
   ) {
-    const stage = await this.stageRepository.findOne({ where: { id } });
+    for (const task of stage.tasks) {
+      if (!updateTaskOrderDto.taskOrder.includes(task.id)) {
+        throw new BadRequestException("Not all tasks are included");
+      }
+    }
     for (const taskId of updateTaskOrderDto.taskOrder) {
-      if (!stage.tasks.includes(taskId)) {
+      if (!stage.tasksOrder.includes(taskId)) {
         throw new BadRequestException("Task does not belong to this stage");
       }
     }
-    for (const taskId of stage.tasks.map(Number)) {
+    for (const taskId of stage.tasksOrder.map(Number)) {
       if (!updateTaskOrderDto.taskOrder.includes(Number(taskId))) {
         throw new BadRequestException("All tasks must be included");
       }
@@ -85,18 +91,17 @@ export class StagesService {
     ) {
       throw new BadRequestException("Duplicate tasks");
     }
-    return this.stageRepository.update(id, {
-      tasks: updateTaskOrderDto.taskOrder,
+    return this.stageRepository.update(stage.id, {
+      tasksOrder: updateTaskOrderDto.taskOrder,
     });
   }
 
-  public async removeTask(stageId: number, taskId: number) {
-    const stage = await this.stageRepository.findOne({
-      where: { id: stageId },
+  public async removeTask(stage: Stage, task: Task) {
+    stage.tasksOrder = stage.tasksOrder.filter((id) => id !== task.id);
+    await this.tasksService.update(task.id, { stage: null });
+    return this.stageRepository.update(stage.id, {
+      tasksOrder: stage.tasksOrder,
     });
-    stage.tasks = stage.tasks.filter((id) => id !== taskId);
-    await this.tasksService.update(taskId, { stageId: null });
-    return this.stageRepository.update(stage.id, { tasks: stage.tasks });
   }
 
   public async remove(id: number) {
@@ -108,13 +113,14 @@ export class StagesService {
   }
 
   private async formatStage(stage: Stage) {
+    const orderedTasks = stage.tasksOrder.map((id) =>
+      stage.tasks.find((task) => task.id === id)
+    );
+    delete stage.tasksOrder;
+    delete stage.tasks;
     return {
       ...stage,
-      tasks: await Promise.all(
-        stage.tasks.map(async (taskId: number) => {
-          return await this.tasksService.findOne(taskId);
-        })
-      ),
+      tasks: orderedTasks,
     };
   }
 }
