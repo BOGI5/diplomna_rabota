@@ -5,7 +5,7 @@ import {
   Injectable,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { CreateMemberDto } from "./dto/create-member.dto";
 import { UpdateMemberDto } from "./dto/update-member.dto";
 import { Member } from "./entities/member.entity";
@@ -25,57 +25,83 @@ export class MembersService {
   ) {}
 
   public async create(createMemberDto: CreateMemberDto) {
-    return this.memberRepository.save(createMemberDto).catch((error) => {
-      if (error.code === "23505") {
-        throw new BadRequestException(
-          "User is already a member of this project"
-        );
-      }
-      throw error;
-    });
+    const user = await this.usersService.findOne(createMemberDto.userId);
+    return this.memberRepository
+      .save({ ...createMemberDto, user: user })
+      .catch((error) => {
+        if (error.code === "23505") {
+          throw new BadRequestException(
+            "User is already a member of this project"
+          );
+        }
+        throw error;
+      });
   }
 
-  public async findAll() {
+  public async findAll(findRelatedTasks = true) {
     const members = await this.memberRepository.find();
     return await Promise.all(
       members.map(async (member) => {
-        return await this.formatMember(member);
+        return await this.formatMember(member, findRelatedTasks);
       })
     );
   }
 
-  public async findOne(id: number) {
+  public async findOne(id: number, findRelatedTasks = true) {
     const member = await this.memberRepository.findOne({ where: { id } });
-    return await this.formatMember(member);
+    return await this.formatMember(member, findRelatedTasks);
   }
 
-  public async findByProjectId(projectId: number) {
-    const members = await this.memberRepository.find({ where: { projectId } });
-    return await Promise.all(
-      members.map(async (member) => {
-        return await this.formatMember(member);
-      })
-    );
-  }
-
-  public async findByUserId(userId: number) {
-    const members = await this.memberRepository.find({ where: { userId } });
-    return await Promise.all(
-      members.map(async (member) => {
-        return await this.formatMember(member);
-      })
-    );
-  }
-
-  public async findMember(userId: number, projectId: number) {
-    const member = await this.memberRepository.findOne({
-      where: { userId, projectId },
+  public async findMany(ids: number[], findRelatedTasks = true) {
+    const members = await this.memberRepository.find({
+      where: { id: In(ids) },
     });
-    return await this.formatMember(member);
+    return await Promise.all(
+      members.map(async (member) => {
+        return await this.formatMember(member, findRelatedTasks);
+      })
+    );
+  }
+
+  public async findByProjectId(projectId: number, findRelatedTasks = true) {
+    const members = await this.memberRepository.find({
+      where: {
+        project: { id: projectId },
+      },
+    });
+    return await Promise.all(
+      members.map(async (member) => {
+        return await this.formatMember(member, findRelatedTasks);
+      })
+    );
+  }
+
+  public async findByUserId(userId: number, findRelatedTasks = true) {
+    const members = await this.memberRepository.find({
+      where: { user: { id: userId } },
+      relations: { user: true, project: true },
+    });
+    console.log(members[0]);
+    return await Promise.all(
+      members.map(async (member) => {
+        return await this.formatMember(member, findRelatedTasks);
+      })
+    );
+  }
+
+  public async findMember(
+    userId: number,
+    projectId: number,
+    findRelatedTasks = true
+  ) {
+    const member = await this.memberRepository.findOne({
+      where: { user: { id: userId }, project: { id: projectId } },
+    });
+    return await this.formatMember(member, findRelatedTasks);
   }
 
   public update(id: number, updateMemberDto: UpdateMemberDto) {
-    delete updateMemberDto.projectId;
+    delete updateMemberDto.project;
     delete updateMemberDto.userId;
     if (Object.keys(updateMemberDto).length === 0) {
       throw new BadRequestException("Empty update data");
@@ -91,20 +117,18 @@ export class MembersService {
     return this.memberRepository.delete(id);
   }
 
-  private async formatMember(member: Member) {
-    const assignments = await this.assignmentsService.findByMemberId(member.id);
-    const assignedTasks = await Promise.all(
-      assignments.map(async (assignment) => {
-        return await this.tasksService.findOne(assignment.taskId);
-      })
-    );
-    return {
-      ...member,
-      user: plainToInstance(
-        User,
-        await this.usersService.findOne(member.userId)
-      ),
-      assignedTasks,
-    };
+  private async formatMember(member: Member, findRelatedTasks = true) {
+    member.user = plainToInstance(User, member.user);
+    if (findRelatedTasks) {
+      const assignedTasks = await this.tasksService.findMany(
+        member.assignments.map((assignment) => assignment.task.id),
+        false
+      );
+      delete member.assignments;
+      return { ...member, assignedTasks: assignedTasks };
+    } else {
+      delete member.assignments;
+      return member;
+    }
   }
 }

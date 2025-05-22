@@ -1,13 +1,14 @@
-import { IsIn, IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsIn, IsInt, IsNotEmpty, IsObject, IsString } from "class-validator";
+import { Project } from "src/projects/entities/project.entity";
 
 export class CreateMemberDto {
   @IsInt()
   @IsNotEmpty()
   userId: number;
 
-  @IsInt()
+  @IsObject()
   @IsNotEmpty()
-  projectId: number;
+  project: Project;
 
   @IsString()
   @IsIn(["Owner", "Admin", "User"])
