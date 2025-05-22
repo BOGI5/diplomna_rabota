@@ -1,19 +1,30 @@
+import { Assignment } from "src/assignments/entities/assignment.entity";
 import { Project } from "src/projects/entities/project.entity";
 import { Stage } from "src/stages/entities/stage.entity";
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 
 @Entity()
 export class Task {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => Project, (project) => project.id)
-  @Column()
-  projectId: number;
+  @ManyToOne(() => Project, (project) => project.tasks, { nullable: false })
+  project: Project;
 
-  @OneToOne(() => Stage, (stage) => stage.id)
-  @Column({ nullable: true })
-  stageId: number | null;
+  @ManyToOne(() => Stage, (stage) => stage.tasks, { nullable: true })
+  stage: Stage | null;
+
+  @OneToMany(() => Assignment, (assignment) => assignment.task, {
+    cascade: true,
+    eager: true,
+  })
+  assignments: Assignment[];
 
   @Column()
   name: string;

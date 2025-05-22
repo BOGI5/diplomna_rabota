@@ -4,7 +4,7 @@ import {
   Inject,
   Injectable,
 } from "@nestjs/common";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { StagesService } from "src/stages/stages.service";
 import { CreateTaskDto } from "./dto/create-task.dto";
@@ -27,47 +27,60 @@ export class TasksService {
   public async create(createTaskDto: CreateTaskDto) {
     if (createTaskDto.stageId) {
       const stage = await this.stagesService.findOne(createTaskDto.stageId);
-      if (stage.projectId !== createTaskDto.projectId) {
+      if (stage.project.id !== createTaskDto.project.id) {
         throw new BadRequestException("Stage does not belong to this project");
       }
     }
     return this.taskRepository.save(createTaskDto);
   }
 
-  public async findAll() {
+  public async findAll(findRelatedMembers = true) {
     const tasks = await this.taskRepository.find();
     return await Promise.all(
       tasks.map(async (task) => {
-        return await this.formatTask(task);
+        return await this.formatTask(task, findRelatedMembers);
       })
     );
   }
 
-  public async findOne(id: number) {
+  public async findOne(id: number, findRelatedMembers = true) {
     const task = await this.taskRepository.findOne({ where: { id } });
-    return await this.formatTask(task);
+    return await this.formatTask(task, findRelatedMembers);
   }
 
-  public async findByProjectId(projectId: number) {
-    const tasks = await this.taskRepository.find({ where: { projectId } });
+  public async findMany(ids: number[], findRelatedMembers = true) {
+    const tasks = await this.taskRepository.find({ where: { id: In(ids) } });
     return await Promise.all(
       tasks.map(async (task) => {
-        return await this.formatTask(task);
+        return await this.formatTask(task, findRelatedMembers);
       })
     );
   }
 
-  public async findByStageId(stageId: number) {
-    const tasks = await this.taskRepository.find({ where: { stageId } });
+  public async findByProjectId(projectId: number, findRelatedMembers = true) {
+    const tasks = await this.taskRepository.find({
+      where: { project: { id: projectId } },
+    });
     return await Promise.all(
       tasks.map(async (task) => {
-        return await this.formatTask(task);
+        return await this.formatTask(task, findRelatedMembers);
+      })
+    );
+  }
+
+  public async findByStageId(stageId: number, findRelatedMembers = true) {
+    const tasks = await this.taskRepository.find({
+      where: { stage: { id: stageId } },
+    });
+    return await Promise.all(
+      tasks.map(async (task) => {
+        return await this.formatTask(task, findRelatedMembers);
       })
     );
   }
 
   public update(id: number, updateTaskDto: UpdateTaskDto) {
-    delete updateTaskDto.projectId;
+    delete updateTaskDto.project;
     if (Object.keys(updateTaskDto).length === 0) {
       throw new BadRequestException("Empty update data");
     }
@@ -82,15 +95,17 @@ export class TasksService {
     return this.taskRepository.delete(id);
   }
 
-  private async formatTask(task: Task) {
-    const assignments = await this.assignmentsService.findByTaskId(task.id);
-    return {
-      ...task,
-      assignedMembers: await Promise.all(
-        assignments.map(async (assignment) => {
-          return await this.membersService.findOne(assignment.memberId);
-        })
-      ),
-    };
+  private async formatTask(task: Task, findRelatedMembers = true) {
+    if (findRelatedMembers) {
+      const assignedMembers = this.membersService.findMany(
+        task.assignments.map((assignment) => assignment.member.id),
+        false
+      );
+      delete task.assignments;
+      return { ...task, assignedMembers: assignedMembers };
+    } else {
+      delete task.assignments;
+      return task;
+    }
   }
 }
