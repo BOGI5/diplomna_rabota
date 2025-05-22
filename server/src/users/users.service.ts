@@ -3,15 +3,14 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  ValidationPipe,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
+import { MembersService } from "src/members/members.service";
 import { CreateGoogleUserDto } from "./dto/create-google-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { User } from "./entities/user.entity";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { MembersService } from "src/members/members.service";
+import { User } from "./entities/user.entity";
 
 @Injectable()
 export class UsersService {
@@ -25,20 +24,10 @@ export class UsersService {
   public async createGoogleUser(
     createGoogleUserDto: CreateGoogleUserDto
   ): Promise<User> {
-    const validationPipe = new ValidationPipe();
-    await validationPipe.transform(createGoogleUserDto, {
-      type: "body",
-      metatype: CreateGoogleUserDto,
-    });
     return this.userRepository.save(createGoogleUserDto);
   }
 
   public async create(createUserDto: CreateUserDto): Promise<User> {
-    const validationPipe = new ValidationPipe();
-    await validationPipe.transform(createUserDto, {
-      type: "body",
-      metatype: CreateUserDto,
-    });
     return this.userRepository.save(createUserDto);
   }
 
@@ -67,17 +56,9 @@ export class UsersService {
   }
 
   public async update(id: number, updateUserDto: UpdateUserDto) {
-    const validationPipe = new ValidationPipe();
-    await validationPipe.transform(updateUserDto, {
-      type: "body",
-      metatype: UpdateUserDto,
-    });
-    if (updateUserDto.email) {
-      delete updateUserDto.email;
-    }
-    if (updateUserDto.password) {
-      delete updateUserDto.password;
-    }
+    delete updateUserDto.email;
+    delete updateUserDto.password;
+    delete updateUserDto.memberships;
 
     if (Object.keys(updateUserDto).length === 0) {
       throw new BadRequestException("Empty update data");

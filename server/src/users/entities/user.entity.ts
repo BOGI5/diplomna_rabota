@@ -1,5 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, Unique } from "typeorm";
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  Unique,
+  OneToMany,
+} from "typeorm";
 import { Expose, Exclude } from "class-transformer";
+import { Member } from "src/members/entities/member.entity";
 
 @Entity("users")
 @Unique(["email"])
@@ -35,4 +42,11 @@ export class User {
   @Column({ nullable: true })
   @Exclude()
   accessToken: string | null;
+
+  @OneToMany(() => Member, (member) => member.user, {
+    cascade: true,
+    eager: true,
+  })
+  @Expose()
+  memberships: Member[];
 }
