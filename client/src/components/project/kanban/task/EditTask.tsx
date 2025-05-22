@@ -26,7 +26,9 @@ export default function EditTask({
   const [description, setDescription] = useState(task.description);
 
   let taskAssigned =
-    currentMember && task.assignedMembers.includes(currentMember);
+    currentMember &&
+    Array.isArray(task.assignedMembers) &&
+    task.assignedMembers.includes(currentMember);
 
   return (
     <Dialog
@@ -83,7 +85,7 @@ export default function EditTask({
               if (taskAssigned) {
                 await apiService
                   .delete(
-                    `/projects/${task.projectId}/tasks/${task.id}/unassign`
+                    `/projects/${task.project.id}/tasks/${task.id}/unassign`
                   )
                   .then(() => {
                     updateProjectData();
@@ -91,7 +93,7 @@ export default function EditTask({
                   });
               } else {
                 await apiService
-                  .post(`/projects/${task.projectId}/tasks/${task.id}/assign`)
+                  .post(`/projects/${task.project.id}/tasks/${task.id}/assign`)
                   .then(() => {
                     updateProjectData();
                     taskAssigned = true;
@@ -123,10 +125,13 @@ export default function EditTask({
                   if (edit) {
                     if (name.length === 0) return;
                     await apiService
-                      .patch(`/projects/${task?.projectId}/tasks/${task?.id}`, {
-                        name,
-                        description,
-                      })
+                      .patch(
+                        `/projects/${task?.project.id}/tasks/${task?.id}`,
+                        {
+                          name,
+                          description,
+                        }
+                      )
                       .then(() => {
                         updateProjectData();
                       });
@@ -142,7 +147,7 @@ export default function EditTask({
                 text
                 onClick={async () => {
                   await apiService.delete(
-                    `/projects/${task?.projectId}/tasks/${task?.id}`
+                    `/projects/${task?.project.id}/tasks/${task?.id}`
                   );
                   updateProjectData();
                 }}

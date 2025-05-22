@@ -48,13 +48,17 @@ export class MembersService {
   }
 
   public async findOne(id: number, findRelatedTasks = true) {
-    const member = await this.memberRepository.findOne({ where: { id } });
+    const member = await this.memberRepository.findOne({
+      where: { id },
+      relations: { user: true, project: true },
+    });
     return await this.formatMember(member, findRelatedTasks);
   }
 
   public async findMany(ids: number[], findRelatedTasks = true) {
     const members = await this.memberRepository.find({
       where: { id: In(ids) },
+      relations: { user: true, project: true },
     });
     return await Promise.all(
       members.map(async (member) => {
@@ -68,6 +72,7 @@ export class MembersService {
       where: {
         project: { id: projectId },
       },
+      relations: { user: true, project: true },
     });
     return await Promise.all(
       members.map(async (member) => {
@@ -81,7 +86,6 @@ export class MembersService {
       where: { user: { id: userId } },
       relations: { user: true, project: true },
     });
-    console.log(members[0]);
     return await Promise.all(
       members.map(async (member) => {
         return await this.formatMember(member, findRelatedTasks);
@@ -96,6 +100,7 @@ export class MembersService {
   ) {
     const member = await this.memberRepository.findOne({
       where: { user: { id: userId }, project: { id: projectId } },
+      relations: { user: true, project: true },
     });
     return await this.formatMember(member, findRelatedTasks);
   }

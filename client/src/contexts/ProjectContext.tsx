@@ -26,7 +26,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({
     project.members = sortMembers(project.members);
     setProject(project);
 
-    const member = project.members.find((member) => member.userId === user.id);
+    const member = project.members.find((member) => member.user.id === user.id);
     setCurrentMember(member || null);
     setPermissions(
       member?.memberType === "Owner"

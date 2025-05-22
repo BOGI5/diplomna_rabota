@@ -71,37 +71,34 @@ export class ProjectsController {
     @Param("id") id: string,
     @Body(ValidationPipe) addMemberDto: AddMemberDto
   ) {
-    return this.projectsService.addMember({
-      ...addMemberDto,
-      projectId: +id,
-    });
+    return this.projectsService.addMember(addMemberDto, +id);
   }
 
   @Patch(":id/members/:memberId/promote")
   @Roles("Admin", "Owner")
   promoteMember(@Param("id") id: string, @Param("memberId") memberId: string) {
-    return this.projectsService.promoteMember(+id, +memberId);
+    return this.projectsService.manageMemberType(+id, +memberId, true);
   }
 
   @Patch(":id/members/:memberId/demote")
   @Roles("Owner")
   demoteMember(@Param("id") id: string, @Param("memberId") memberId: string) {
-    return this.projectsService.demoteMember(+id, +memberId);
+    return this.projectsService.manageMemberType(+id, +memberId, false);
   }
 
   @Delete(":id/leave")
   leaveProject(@Req() req, @Param("id") id: string) {
-    return this.projectsService.leaveProject(req.user.id, +id);
+    return this.projectsService.removeMember(+id, req.user.id, req.user.id);
   }
 
-  @Delete(":id/members/:memberId")
+  @Delete(":id/members/:userId")
   @Roles("Admin", "Owner")
   removeMember(
     @Req() req,
     @Param("id") id: string,
-    @Param("memberId") memberId: string
+    @Param("userId") userId: string
   ) {
-    return this.projectsService.removeMember(+id, +memberId, req.user.id);
+    return this.projectsService.removeMember(+id, +userId, req.user.id);
   }
 
   @Post(":id/stages")
@@ -110,10 +107,7 @@ export class ProjectsController {
     @Param("id") id: string,
     @Body(ValidationPipe) addStageDto: AddStageDto
   ) {
-    return this.projectsService.addStage({
-      ...addStageDto,
-      projectId: +id,
-    });
+    return this.projectsService.addStage(addStageDto, +id);
   }
 
   @Get(":id/stages")
@@ -166,7 +160,7 @@ export class ProjectsController {
     @Param("taskId") taskId: string,
     @Body(ValidationPipe) updateTaskStageDto: UpdateTaskStageDto
   ) {
-    return this.projectsService.stageTask(
+    return this.projectsService.manageTaskStage(
       +id,
       +taskId,
       updateTaskStageDto.destinationStageId
@@ -191,7 +185,7 @@ export class ProjectsController {
 
   @Patch(":id/stages/:stageId/tasks/:taskId/unstage")
   unstageTask(@Param("id") id: string, @Param("taskId") taskId: string) {
-    return this.projectsService.unstageTask(+id, +taskId);
+    return this.projectsService.manageTaskStage(+id, +taskId, null);
   }
 
   @Get(":id/tasks")
@@ -205,10 +199,7 @@ export class ProjectsController {
     @Param("id") id: string,
     @Body(ValidationPipe) addTaskDto: AddTaskDto
   ) {
-    return this.projectsService.addTask({
-      ...addTaskDto,
-      projectId: +id,
-    });
+    return this.projectsService.addTask(addTaskDto, +id);
   }
 
   @Patch(":id/tasks/:taskId")
@@ -233,7 +224,12 @@ export class ProjectsController {
     @Param("taskId") taskId: string,
     @Req() req
   ) {
-    return this.projectsService.assignTask(+id, +taskId, req.user.id);
+    return this.projectsService.manageAssignment(
+      +id,
+      +taskId,
+      req.user.id,
+      true
+    );
   }
 
   @Delete(":id/tasks/:taskId/unassign")
@@ -242,7 +238,12 @@ export class ProjectsController {
     @Param("taskId") taskId: string,
     @Req() req
   ) {
-    return this.projectsService.unassignTask(+id, +taskId, req.user.id);
+    return this.projectsService.manageAssignment(
+      +id,
+      +taskId,
+      req.user.id,
+      false
+    );
   }
 
   @Patch(":id")

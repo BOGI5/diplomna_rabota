@@ -64,7 +64,7 @@ export default function EditStage({
                 return;
               }
               await apiService
-                .patch(`/projects/${stage?.projectId}/stages/${stage?.id}`, {
+                .patch(`/projects/${stage?.project.id}/stages/${stage?.id}`, {
                   name,
                 })
                 .then(() => {
@@ -81,7 +81,7 @@ export default function EditStage({
             icon="pi pi-trash"
             onClick={async () => {
               await apiService
-                .delete(`/projects/${stage?.projectId}/stages/${stage?.id}`)
+                .delete(`/projects/${stage?.project.id}/stages/${stage?.id}`)
                 .then(() => {
                   updateProjectData();
                   setVisible(false);

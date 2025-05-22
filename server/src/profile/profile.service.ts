@@ -14,14 +14,9 @@ export class ProfileService {
 
   public async findTasks(userId: number) {
     const members = await this.membersService.findByUserId(userId);
+    const memberIds = members.map((member) => member.id);
     const tasks = [];
-    await Promise.all(
-      members.map(async (member) => {
-        member.assignments.map(async (assignment) => {
-          tasks.push(await this.tasksService.findOne(assignment.taskId));
-        });
-      })
-    );
+
     return tasks;
   }
 
@@ -47,7 +42,7 @@ export class ProfileService {
   private async findProjects(members: Member[]) {
     return await Promise.all(
       members.map(async (member) => {
-        return await this.projectsService.findOne(member.projectId);
+        return await this.projectsService.findOne(member.project.id);
       })
     );
   }

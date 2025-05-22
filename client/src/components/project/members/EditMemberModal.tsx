@@ -73,7 +73,7 @@ export default function EditMemberModal({
                 disabled={currentMember?.memberType === "Owner"}
                 onClick={async () => {
                   await apiService.delete(
-                    `/projects/${currentMember?.projectId}/leave`
+                    `/projects/${currentMember?.project.id}/leave`
                   );
                   window.location.href = "/";
                 }}
@@ -91,7 +91,7 @@ export default function EditMemberModal({
                 onClick={async () => {
                   if (member?.memberType === "Admin") {
                     await apiService.post(
-                      `/projects/${member?.projectId}/transfer-ownership`,
+                      `/projects/${member?.project.id}/transfer-ownership`,
                       {
                         newOwnerId: member?.id,
                       }
@@ -101,7 +101,7 @@ export default function EditMemberModal({
                     }
                   } else {
                     await apiService.patch(
-                      `/projects/${member?.projectId}/members/${member?.id}/promote`,
+                      `/projects/${member?.project.id}/members/${member?.id}/promote`,
                       {}
                     );
                     if (member) {
@@ -143,7 +143,7 @@ export default function EditMemberModal({
                   <Button
                     onClick={async () => {
                       await apiService.patch(
-                        `/projects/${member?.projectId}/members/${member?.id}/demote`,
+                        `/projects/${member?.project.id}/members/${member?.id}/demote`,
                         {}
                       );
                       if (member) {
@@ -166,7 +166,7 @@ export default function EditMemberModal({
                   disabled={canEdit}
                   onClick={async () => {
                     await apiService.delete(
-                      `/projects/${member?.projectId}/members/${member?.id}`
+                      `/projects/${member?.project.id}/members/${member?.user.id}`
                     );
                     updateProjectData();
                     setMember(undefined);

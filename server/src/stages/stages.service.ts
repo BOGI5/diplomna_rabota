@@ -25,6 +25,10 @@ export class StagesService {
   }
 
   public async addTask(stage: Stage, task: Task) {
+    stage = await this.stageRepository.findOne({
+      where: { id: stage.id },
+      relations: { tasks: true, project: true },
+    });
     stage.tasksOrder.push(task.id);
     await this.tasksService.update(task.id, { stage });
     return this.stageRepository.update(stage.id, {
@@ -33,7 +37,9 @@ export class StagesService {
   }
 
   public async findAll() {
-    const stages = await this.stageRepository.find();
+    const stages = await this.stageRepository.find({
+      relations: { tasks: true, project: true },
+    });
     return await Promise.all(
       stages.map(async (stage) => {
         return await this.formatStage(stage);
@@ -43,13 +49,17 @@ export class StagesService {
 
   public async findOne(id: number) {
     return await this.formatStage(
-      await this.stageRepository.findOne({ where: { id } })
+      await this.stageRepository.findOne({
+        where: { id },
+        relations: { tasks: true, project: true },
+      })
     );
   }
 
   public async findByProjectId(projectId: number) {
     const stages = await this.stageRepository.find({
       where: { project: { id: projectId } },
+      relations: { tasks: true, project: true },
     });
     return await Promise.all(
       stages.map(async (stage) => {

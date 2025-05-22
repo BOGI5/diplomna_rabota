@@ -95,16 +95,16 @@ export default function KanbanBoard() {
               if (activeStage !== overStage) {
                 const task = project.stages[activeStage].tasks[activeIndex];
                 const destStage = project.stages[overStage];
-                if (task) {
+                if (task && task.stage) {
                   await apiService.patch(
                     `/projects/${project.id}/stages/${
-                      task.stageId || "unstaged"
+                      task.stage?.id || "unstaged"
                     }/tasks/${task.id}`,
                     {
                       destinationStageId: destStage.id,
                     }
                   );
-                  task.stageId = destStage.id;
+                  task.stage.id = destStage.id;
                   project.stages[activeStage].tasks.splice(activeIndex, 1);
                   project.stages[overStage].tasks.push(task);
                   activeIndex = project.stages[overStage].tasks.length - 1;
@@ -158,7 +158,7 @@ export default function KanbanBoard() {
                 );
               if (task) {
                 await apiService.patch(
-                  `/projects/${project.id}/stages/${task.stageId}/tasks/${task.id}/unstage`
+                  `/projects/${project.id}/stages/${task.stage?.id}/tasks/${task.id}/unstage`
                 );
                 updateProjectData();
               }

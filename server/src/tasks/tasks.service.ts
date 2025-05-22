@@ -35,7 +35,9 @@ export class TasksService {
   }
 
   public async findAll(findRelatedMembers = true) {
-    const tasks = await this.taskRepository.find();
+    const tasks = await this.taskRepository.find({
+      relations: { stage: true, project: true },
+    });
     return await Promise.all(
       tasks.map(async (task) => {
         return await this.formatTask(task, findRelatedMembers);
@@ -44,12 +46,18 @@ export class TasksService {
   }
 
   public async findOne(id: number, findRelatedMembers = true) {
-    const task = await this.taskRepository.findOne({ where: { id } });
+    const task = await this.taskRepository.findOne({
+      where: { id },
+      relations: { stage: true, project: true },
+    });
     return await this.formatTask(task, findRelatedMembers);
   }
 
   public async findMany(ids: number[], findRelatedMembers = true) {
-    const tasks = await this.taskRepository.find({ where: { id: In(ids) } });
+    const tasks = await this.taskRepository.find({
+      where: { id: In(ids) },
+      relations: { stage: true, project: true },
+    });
     return await Promise.all(
       tasks.map(async (task) => {
         return await this.formatTask(task, findRelatedMembers);
@@ -60,6 +68,7 @@ export class TasksService {
   public async findByProjectId(projectId: number, findRelatedMembers = true) {
     const tasks = await this.taskRepository.find({
       where: { project: { id: projectId } },
+      relations: { stage: true, project: true },
     });
     return await Promise.all(
       tasks.map(async (task) => {
@@ -71,6 +80,7 @@ export class TasksService {
   public async findByStageId(stageId: number, findRelatedMembers = true) {
     const tasks = await this.taskRepository.find({
       where: { stage: { id: stageId } },
+      relations: { stage: true, project: true },
     });
     return await Promise.all(
       tasks.map(async (task) => {
