@@ -1,8 +1,8 @@
+import { Repository, In } from "typeorm";
 import { Injectable } from "@nestjs/common";
-import { CreateAssignmentDto } from "./dto/create-assignment.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Assignment } from "./entities/assignment.entity";
-import { Repository } from "typeorm";
+import { CreateAssignmentDto } from "./dto/create-assignment.dto";
 
 @Injectable()
 export class AssignmentsService {
@@ -23,17 +23,25 @@ export class AssignmentsService {
     return this.assignmentRepository.findOne({ where: { id } });
   }
 
+  public findMany(ids: number[]) {
+    return this.assignmentRepository.find({
+      where: { id: In(ids) },
+    });
+  }
+
   public findByTaskId(taskId: number) {
-    return this.assignmentRepository.find({ where: { taskId } });
+    return this.assignmentRepository.find({ where: { task: { id: taskId } } });
   }
 
   public findByMemberId(memberId: number) {
-    return this.assignmentRepository.find({ where: { memberId } });
+    return this.assignmentRepository.find({
+      where: { member: { id: memberId } },
+    });
   }
 
   public findAssignment(memberId: number, taskId: number) {
     return this.assignmentRepository.findOne({
-      where: { memberId, taskId },
+      where: { member: { id: memberId }, task: { id: taskId } },
     });
   }
 

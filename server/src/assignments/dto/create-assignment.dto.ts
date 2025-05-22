@@ -1,11 +1,13 @@
-import { IsInt, IsNotEmpty } from "class-validator";
+import { Task } from "src/tasks/entities/task.entity";
+import { Member } from "src/members/entities/member.entity";
+import { IsNotEmpty, IsObject } from "class-validator";
 
 export class CreateAssignmentDto {
-  @IsInt()
+  @IsObject()
   @IsNotEmpty()
-  taskId: number;
+  task: Task;
 
-  @IsInt()
+  @IsObject()
   @IsNotEmpty()
-  memberId: number;
+  member: Member;
 }
