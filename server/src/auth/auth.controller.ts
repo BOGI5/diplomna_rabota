@@ -12,13 +12,14 @@ import {
 import { Response } from "express";
 import { plainToInstance } from "class-transformer";
 import { User } from "src/users/entities/user.entity";
-import { AuthService } from "./auth.service";
-import { GoogleOAuthGuard } from "./guards/google-oauth.guard";
 import { AccessTokenGuard } from "./guards/accessToken.guard";
+import { GoogleOAuthGuard } from "./guards/google-oauth.guard";
 import { RefreshTokenGuard } from "./guards/refreshToken.guard";
-import { LoginUserDto } from "src/users/dto/login-user.dto";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
+import { GoogleUserDto } from "./dto/google-user.dto";
+import { LoginUserDto } from "./dto/login-user.dto";
+import { AuthService } from "./auth.service";
 
 @Controller("auth")
 export class AuthController {
@@ -31,7 +32,14 @@ export class AuthController {
   @UseGuards(GoogleOAuthGuard)
   @Get("google-auth-redirect")
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
-    let user = await this.authService.signInWithGoogle(req.user, res);
+    const validatedUser = await new ValidationPipe({
+      transform: true,
+    }).transform(req.user, {
+      type: "body",
+      metatype: GoogleUserDto,
+      data: req.user,
+    });
+    let user = await this.authService.signInWithGoogle(validatedUser, res);
     user = plainToInstance(User, user);
     delete user.email;
     return res.redirect(

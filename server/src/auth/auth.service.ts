@@ -1,14 +1,18 @@
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { Response } from "express";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { User } from "src/users/entities/user.entity";
+import { UsersService } from "src/users/users.service";
 import { compareSync, genSaltSync, hashSync } from "bcrypt-ts";
 import { CreateUserDto } from "src/users/dto/create-user.dto";
-import { LoginUserDto } from "src/users/dto/login-user.dto";
-import { UsersService } from "src/users/users.service";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
-import { User } from "src/users/entities/user.entity";
-import { GoogleUser } from "./interfaces/auth.interfaces";
+import { GoogleUserDto } from "./dto/google-user.dto";
+import { LoginUserDto } from "./dto/login-user.dto";
 import {
   COOKIE_NAMES,
   TOKENS_EXPIRATION_TIME,
@@ -23,12 +27,13 @@ export class AuthService {
   ) {}
 
   public async signInWithGoogle(
-    user: GoogleUser,
+    user: GoogleUserDto,
     res: Response
   ): Promise<User> {
-    if (!user) throw new BadRequestException("Unauthenticated");
+    if (!user) throw new UnauthorizedException();
     let existingUser = await this.usersService.findByEmail(user.email);
-    if (!existingUser) existingUser = await this.registerGoogleUser(user);
+    if (!existingUser)
+      existingUser = await this.usersService.createGoogleUser(user);
     await this.generateTokens(existingUser);
     existingUser = await this.usersService.findByEmail(user.email);
     this.setTokensToCookies(
@@ -46,7 +51,7 @@ export class AuthService {
       !user.password ||
       !this.compareHashedData(userDto.password, user.password)
     )
-      throw new BadRequestException("Invalid credentials");
+      throw new UnauthorizedException("Invalid credentials");
     await this.generateTokens(user);
     user = await this.usersService.findByEmail(user.email);
     this.setTokensToCookies(res, user.accessToken, user.refreshToken);
@@ -89,21 +94,12 @@ export class AuthService {
       !user.password ||
       !this.compareHashedData(updatePasswordDto.currentPassword, user.password)
     ) {
-      throw new BadRequestException("Invalid credentials");
+      throw new UnauthorizedException("Invalid credentials");
     }
     await this.usersService.updatePassword(
       id,
       this.hashData(updatePasswordDto.newPassword)
     );
-  }
-
-  private async registerGoogleUser(user: GoogleUser): Promise<User> {
-    return await this.usersService.createGoogleUser({
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      picture: user.picture,
-    });
   }
 
   private hashData(data: string): string {
@@ -152,14 +148,14 @@ export class AuthService {
   ): void {
     res.cookie(COOKIE_NAMES.ACCESS_TOKEN, accessToken, {
       httpOnly: true,
-      // secure: true,
+      secure: true,
       expires: new Date(
         new Date().getTime() + TOKENS_EXPIRATION_TIME.COOKIE_EXPIRATION_TIME
       ),
     });
     res.cookie(COOKIE_NAMES.REFRESH_TOKEN, refreshToken, {
       httpOnly: true,
-      // secure: true,
+      secure: true,
       expires: new Date(
         new Date().getTime() + TOKENS_EXPIRATION_TIME.COOKIE_EXPIRATION_TIME
       ),
